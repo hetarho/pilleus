@@ -1,0 +1,26 @@
+{
+  "name": "@pilleus/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45",
+    "@neondatabase/serverless": "^1",
+    "dotenv": "^16",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31",
+    "typescript": "^5"
+  }
+}

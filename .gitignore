@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next/
+out/
+
+# build
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# turbo
+.turbo
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+
+# drizzle
+drizzle/meta
+
+# vercel
+.vercel
