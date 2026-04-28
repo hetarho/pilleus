@@ -23,9 +23,15 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/app/*": ["./src/client/app/*"],
+      "@/pages/*": ["./src/client/pages/*"],
+      "@/widgets/*": ["./src/client/widgets/*"],
+      "@/features/*": ["./src/client/features/*"],
+      "@/entities/*": ["./src/client/entities/*"],
+      "@/shared/*": ["./src/client/shared/*"],
+      "@/server": ["./src/server/index.ts"],
+      "@/server/*": ["./src/server/*"]
     }
   },
   "include": [

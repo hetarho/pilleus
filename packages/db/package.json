@@ -20,6 +20,7 @@
     "zod": "^4"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "drizzle-kit": "^0.31",
     "tsx": "^4",
     "typescript": "^5"
