@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/entities/session";
 import { CreateProjectForm } from "@/features/project-create";
-import { DashboardHeader } from "@/widgets/dashboard-header";
 import { ProjectList } from "@/widgets/project-list";
 
 export function DashboardView() {
@@ -19,7 +18,9 @@ export function DashboardView() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">Loading...</div>
+      <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
+        Loading...
+      </div>
     );
   }
 
@@ -29,7 +30,6 @@ export function DashboardView() {
 
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <DashboardHeader />
       <div className="mb-8">
         <CreateProjectForm />
       </div>
