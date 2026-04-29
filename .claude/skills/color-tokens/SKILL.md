@@ -17,6 +17,36 @@ Guidelines, GitHub Primer, and WCAG 2.2. Each rule below cites the rationale.
 
 ## Hard rules
 
+### R0 — Surface elevation: sunken / surface / raised / overlay
+
+Surfaces are organized by elevation, not by component. Four position-based
+tokens express any surface in the system:
+
+| Token | Meaning | Light | Dark |
+|-------|---------|-------|------|
+| `--surface-sunken` | Recessed inside the current surface | one neutral step darker | same as `--surface` |
+| `--surface` | Default page surface (= `--background`) | `--neutral-0` | `--neutral-950` |
+| `--surface-raised` | Elevated above the current surface | same color + shadow | one neutral step lighter |
+| `--surface-overlay` | Floating on everything (popover, dialog) | same color + bigger shadow | two neutral steps lighter |
+
+In light mode the page is already very bright, so "raised" cannot get
+brighter — elevation is communicated by **shadow**. Sunken still goes a
+step darker.
+
+In dark mode the page is dark, so elevation goes **lighter** (Material 3
+tonal elevation). Sunken collapses to the page color so a nested element
+appears carved into its parent.
+
+**Nested cards** (card-in-card, panel-in-panel): outer is `--surface-raised`,
+inner is `--surface-sunken`. The same token works at any depth — depth-3
+nesting still uses sunken, with spacing differentiating levels. Don't add
+`--surface-sunken-deeper` etc.; that path leads to combinatorial token bloat.
+
+Functional tokens (`--card`, `--popover`, `--muted`, `--input`) are
+**aliases** of these four. Components consume the functional names; the
+aliasing centralizes wiring so a system-wide elevation tweak touches one
+file.
+
 ### R1 — Two-tier system: palette → semantic
 
 Tokens come in exactly two tiers, in this order:

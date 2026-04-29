@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/entities/session";
-import { CreateProjectForm } from "@/features/project-create";
-import { ProjectList } from "@/widgets/project-list";
 
 export function DashboardView() {
   const router = useRouter();
@@ -16,24 +14,13 @@ export function DashboardView() {
     }
   }, [isPending, data, router]);
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
-        Loading...
-      </div>
-    );
-  }
-
-  if (!data?.user) {
+  if (isPending || !data?.user) {
     return null;
   }
 
   return (
-    <main className="mx-auto max-w-2xl p-8">
-      <div className="mb-8">
-        <CreateProjectForm />
-      </div>
-      <ProjectList />
+    <main className="flex flex-1 items-center justify-center">
+      <h1 className="text-6xl font-bold tracking-tight">Pilleus</h1>
     </main>
   );
 }

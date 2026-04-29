@@ -36,6 +36,23 @@ export {
   SheetTitle,
   SheetDescription,
 } from "./sheet";
+export {
+  Dialog,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogPortal,
+  DialogOverlay,
+} from "./dialog";
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./collapsible";
 export { Separator } from "./separator";
 export { Skeleton } from "./skeleton";
 export {

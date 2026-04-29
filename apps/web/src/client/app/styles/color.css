@@ -38,32 +38,66 @@
   --neutral-950:  oklch(0.145 0 0);   /* near-black; preferred for fg in light mode */
   --neutral-1000: oklch(0     0 0);   /* pure black (rarely used) */
 
-  /* Red — for destructive states. Tailwind v4 red ramp. */
-  --red-50:  oklch(0.971 0.013 17.38);
-  --red-100: oklch(0.936 0.032 17.717);
-  --red-200: oklch(0.885 0.062 18.334);
-  --red-300: oklch(0.808 0.114 19.571);
-  --red-400: oklch(0.704 0.191 22.216);
-  --red-500: oklch(0.637 0.237 25.331);
-  --red-600: oklch(0.577 0.245 27.325);
-  --red-700: oklch(0.505 0.213 27.518);
-  --red-800: oklch(0.444 0.177 26.899);
-  --red-900: oklch(0.396 0.141 25.723);
-  --red-950: oklch(0.258 0.092 26.042);
+  /* Red — softer/dustier than Tailwind defaults. Chroma scaled down ~35%
+   * (peak 0.16 vs Tailwind's 0.245) to read as muted, not vivid, while
+   * keeping the lightness ladder intact so contrast pairs are preserved. */
+  --red-50:  oklch(0.971 0.010 25.331);
+  --red-100: oklch(0.936 0.020 25.331);
+  --red-200: oklch(0.885 0.040 25.331);
+  --red-300: oklch(0.808 0.075 25.331);
+  --red-400: oklch(0.704 0.125 25.331);
+  --red-500: oklch(0.637 0.155 25.331);
+  --red-600: oklch(0.577 0.160 25.331);
+  --red-700: oklch(0.505 0.140 25.331);
+  --red-800: oklch(0.444 0.115 25.331);
+  --red-900: oklch(0.396 0.090 25.331);
+  --red-950: oklch(0.258 0.060 25.331);
+
+  /* Brand — cyan/teal at hue 210.547. Same L ladder as red, chroma kept
+   * around the seed value (~0.10) so the brand reads soft/dusty rather
+   * than vivid. Stays well inside sRGB at every step. */
+  --brand-50:  oklch(0.971 0.013 210.547);
+  --brand-100: oklch(0.936 0.025 210.547);
+  --brand-200: oklch(0.885 0.045 210.547);
+  --brand-300: oklch(0.808 0.065 210.547);
+  --brand-400: oklch(0.704 0.085 210.547);
+  --brand-500: oklch(0.637 0.100 210.547); /* seed (rounded) */
+  --brand-600: oklch(0.577 0.100 210.547);
+  --brand-700: oklch(0.505 0.090 210.547);
+  --brand-800: oklch(0.444 0.075 210.547);
+  --brand-900: oklch(0.396 0.060 210.547);
+  --brand-950: oklch(0.258 0.040 210.547);
 }
 
 /* ───────────────────────────────────────────────────────────────────────
  * Tier 2 — Semantic tokens · LIGHT (default)
  * ────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Surfaces */
-  --background:         var(--neutral-0);
+  /* Surface elevation — position-based, three step.
+   *   sunken  : recessed (carved into the current surface). Use for
+   *             nested cards / inputs / muted regions.
+   *   surface : the default page surface (= --background).
+   *   raised  : elevated above the current surface (cards, panels).
+   *   overlay : floating on top of everything (popover, dialog, dropdown).
+   *
+   * In light mode the page is already very bright, so "raised" stays the
+   * same color and elevation is communicated by shadow. Sunken is darker
+   * by one neutral step. */
+  --surface-sunken:     var(--neutral-100);
+  --surface:            var(--neutral-0);
+  --surface-raised:     var(--neutral-0);
+  --surface-overlay:    var(--neutral-0);
+
+  --background:         var(--surface);
   --foreground:         var(--neutral-950);
 
-  --card:               var(--neutral-0);
+  /* Functional surface tokens are aliases of the elevation tokens.
+   * Components keep using bg-card / bg-popover / bg-muted — wiring is
+   * centralized here so a system-wide adjustment touches one file. */
+  --card:               var(--surface-raised);
   --card-foreground:    var(--neutral-950);
 
-  --popover:            var(--neutral-0);
+  --popover:            var(--surface-overlay);
   --popover-foreground: var(--neutral-950);
 
   /* Tonal */
@@ -73,8 +107,9 @@
   --accent:             var(--neutral-100);
   --accent-foreground:  var(--neutral-900);
 
-  /* Brand */
-  --primary:              var(--neutral-900);
+  /* Brand — uses the brand cyan ramp. brand-600 (deeper) gives ~6:1 contrast
+   * against neutral-50 white text, comfortably above WCAG AA. */
+  --primary:              var(--brand-600);
   --primary-foreground:   var(--neutral-50);
 
   --secondary:            var(--neutral-100);
@@ -90,13 +125,18 @@
   --ring:   var(--neutral-400);
 
   /* Sidebar surface — slightly off the page surface so it reads as a
-   * separate region without needing a divider border. */
+   * separate region without needing a divider border.
+   *
+   * Two-step state hierarchy:
+   *   - sidebar-accent : hover and selected sub-menu (same color)
+   *   - sidebar-primary: selected folder/parent (brand-tinted, distinct
+   *                      via hue, similar lightness so it doesn't pop) */
   --sidebar:                    var(--neutral-50);
   --sidebar-foreground:         var(--neutral-900);
-  --sidebar-primary:            var(--neutral-900);
-  --sidebar-primary-foreground: var(--neutral-50);
-  --sidebar-accent:             var(--neutral-100);
+  --sidebar-accent:             var(--neutral-200);
   --sidebar-accent-foreground:  var(--neutral-900);
+  --sidebar-primary:            var(--brand-200);
+  --sidebar-primary-foreground: var(--neutral-900);
   --sidebar-border:             var(--neutral-200);
   --sidebar-ring:               var(--neutral-400);
 }
@@ -107,13 +147,23 @@
  * Tuned independently from light — not an inversion.
  * ────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background:         var(--neutral-950);
+  /* Surface elevation in dark mode flips: deeper = darker isn't possible
+   * (we'd hit pure black), so sunken collapses to the same as the page —
+   * an inner element on a raised surface visually recedes back toward the
+   * "floor". Raised goes one neutral step lighter (tonal elevation,
+   * Material 3 model). Overlay goes another step. */
+  --surface-sunken:     var(--neutral-950);
+  --surface:            var(--neutral-950);
+  --surface-raised:     var(--neutral-900);
+  --surface-overlay:    var(--neutral-800);
+
+  --background:         var(--surface);
   --foreground:         var(--neutral-50);
 
-  --card:               var(--neutral-950);
+  --card:               var(--surface-raised);
   --card-foreground:    var(--neutral-50);
 
-  --popover:            var(--neutral-950);
+  --popover:            var(--surface-overlay);
   --popover-foreground: var(--neutral-50);
 
   --muted:              var(--neutral-800);
@@ -122,7 +172,10 @@
   --accent:             var(--neutral-800);
   --accent-foreground:  var(--neutral-50);
 
-  --primary:              var(--neutral-50);
+  /* Brand stays vivid in dark mode — use a brighter step (brand-400) so the
+   * primary surface still reads on a dark background. Foreground is dark
+   * (neutral-900) for ~7:1 contrast. R5 from color-tokens skill. */
+  --primary:              var(--brand-400);
   --primary-foreground:   var(--neutral-900);
 
   --secondary:            var(--neutral-800);
@@ -137,13 +190,14 @@
   --ring:   var(--neutral-600);
 
   /* Sidebar in dark mode sits one step lighter than --background to read as
-   * an elevated surface (Material 3 surface tonal palette). */
+   * an elevated surface (Material 3 surface tonal palette).
+   * Same two-step hierarchy as light, mirrored toward the dark end. */
   --sidebar:                    var(--neutral-900);
   --sidebar-foreground:         var(--neutral-50);
-  --sidebar-primary:            var(--neutral-50);
-  --sidebar-primary-foreground: var(--neutral-900);
-  --sidebar-accent:             var(--neutral-800);
+  --sidebar-accent:             var(--neutral-700);
   --sidebar-accent-foreground:  var(--neutral-50);
+  --sidebar-primary:            var(--brand-800);
+  --sidebar-primary-foreground: var(--neutral-50);
   --sidebar-border:             var(--neutral-800);
   --sidebar-ring:               var(--neutral-600);
 }

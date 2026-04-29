@@ -410,6 +410,25 @@ Lands in `src/client/shared/ui/` automatically (configured in `components.json`)
 10. **Renaming `views/` and forgetting `apps/web/pages/` is no longer needed.**
     Since FSD pages live at `src/client/pages/` (not `src/pages/`), Next.js does
     NOT auto-detect them as Pages Router. No empty `pages/` stub needed.
+11. **Rendering client-only state at the layout level without `useIsClient()`
+    gating.** Anything whose first-render output depends on browser-only state
+    (TanStack Query cache, localStorage, `document.cookie`, module-level
+    singletons) will SSR with one value and hydrate with another → React
+    hydration mismatch. Layouts persist across navigations, so their query
+    cache often differs from a fresh SSR. Use the `useIsClient` hook
+    (`@/shared/lib/hooks/use-is-client`) to gate the dynamic part: render the
+    skeleton when `!isClient`, real data after. Pages that gate behind a
+    loading state (`if (isPending) return <Loading/>`) on both server and
+    client are usually safe — the issue is layout-level components that render
+    their data unconditionally.
+12. **`Math.random()`, `Date.now()`, `crypto.randomUUID()`, or `new Date()` in
+    a render path or `useMemo`.** These produce different values on the
+    server vs the client and break hydration silently (the diff often shows
+    up as different inline `style` values). If you need a stable id-like
+    value, use React's `useId()`. If you need stable randomness for visual
+    variety (e.g. skeleton widths), derive it deterministically from
+    `useId()` via a hash. shadcn-generated components sometimes ship with
+    raw `Math.random()` — patch them when adopting.
 
 ---
 

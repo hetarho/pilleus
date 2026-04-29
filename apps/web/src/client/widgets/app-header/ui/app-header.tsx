@@ -10,8 +10,9 @@ export function AppHeader() {
 
   return (
     <header className="flex h-14 items-center gap-3 bg-background px-4">
-      <SidebarTrigger />
-      <h1 className="text-base font-semibold">Pilleus</h1>
+      {/* Hamburger only on mobile — desktop has its own trigger inside the sidebar header.
+       * Tailwind `md:` breakpoint (768px) aligns with shadcn sidebar's mobile threshold. */}
+      <SidebarTrigger className="md:hidden" />
       <div className="ml-auto flex items-center gap-2">
         {data?.user && (
           <span className="hidden text-sm text-muted-foreground sm:inline">

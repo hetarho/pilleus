@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 @import "./color.css";
 
 /* Class-based dark mode (Tailwind v4 selector variant).
@@ -11,6 +12,13 @@
 @theme inline {
   --color-background:           var(--background);
   --color-foreground:           var(--foreground);
+
+  /* Surface elevation utilities — `bg-surface`, `bg-surface-sunken`,
+   * `bg-surface-raised`, `bg-surface-overlay`. */
+  --color-surface:              var(--surface);
+  --color-surface-sunken:       var(--surface-sunken);
+  --color-surface-raised:       var(--surface-raised);
+  --color-surface-overlay:      var(--surface-overlay);
 
   --color-card:                 var(--card);
   --color-card-foreground:      var(--card-foreground);
