@@ -1,0 +1,51 @@
+/* MDXEditor token override.
+ *
+ * MDXEditor ships with Radix color scales (slate/blue/cyan/...) and exposes
+ * semantic variables on `.mdxeditor` / `._editorRoot_*` (--baseBg, --baseText,
+ * --accentSolid 등). Default mapping uses Radix slate + blue, ignores our
+ * design system, and hardcodes `--basePageBg: white` so dark mode looks
+ * broken (검정 텍스트 on 흰 배경).
+ *
+ * We rebind those variables to our semantic tokens. Because every token in
+ * color.css already swaps based on `<html class="dark">`, a SINGLE mapping
+ * here automatically tracks light/dark — no separate dark block needed.
+ *
+ * Specificity: `.mdxeditor.mdxeditor` (0,2,0) beats both `.mdxeditor` and
+ * the CSS-modules `._editorRoot_xxx_53` (0,1,0) regardless of import order. */
+.mdxeditor.mdxeditor {
+  /* Surface — editor body & toolbar */
+  --basePageBg:    var(--card);
+  --baseBase:      var(--card);
+  --baseBgSubtle:  var(--muted);
+  --baseBg:        var(--muted);
+  --baseBgHover:   var(--accent);
+  --baseBgActive:  var(--accent);
+
+  /* Lines & borders */
+  --baseLine:         var(--border);
+  --baseBorder:       var(--border);
+  --baseBorderHover:  var(--ring);
+
+  /* Solid foreground (icons, indicators) */
+  --baseSolid:       var(--muted-foreground);
+  --baseSolidHover:  var(--foreground);
+
+  /* Body text */
+  --baseText:         var(--muted-foreground);
+  --baseTextContrast: var(--foreground);
+
+  /* Accent — toolbar selected state, links, active markers.
+   * Track our brand (cyan/teal) instead of Radix blue. */
+  --accentBase:        var(--accent);
+  --accentBgSubtle:    var(--accent);
+  --accentBg:          var(--accent);
+  --accentBgHover:     var(--accent);
+  --accentBgActive:    var(--accent);
+  --accentLine:        var(--primary);
+  --accentBorder:      var(--primary);
+  --accentBorderHover: var(--primary);
+  --accentSolid:       var(--primary);
+  --accentSolidHover:  var(--primary);
+  --accentText:        var(--primary);
+  --accentTextContrast: var(--primary-foreground);
+}

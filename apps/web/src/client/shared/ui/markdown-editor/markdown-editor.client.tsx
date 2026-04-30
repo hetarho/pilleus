@@ -1,6 +1,7 @@
 "use client";
 
 import "@mdxeditor/editor/style.css";
+import "./markdown-editor.css";
 
 import {
   BoldItalicUnderlineToggles,
@@ -40,7 +41,7 @@ export default function MarkdownEditorClient({
       markdown={markdown}
       onChange={onChange}
       readOnly={readOnly}
-      contentEditableClassName="prose max-w-none p-4 min-h-[60vh] focus:outline-none"
+      contentEditableClassName="max-w-none p-4 min-h-[60vh] focus:outline-none"
       plugins={[
         headingsPlugin(),
         listsPlugin(),
