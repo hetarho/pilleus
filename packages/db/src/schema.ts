@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -60,13 +61,40 @@ export const verification = pgTable("verification", {
 
 // ── App tables ──────────────────────────────────────────────────────
 
-export const project = pgTable("project", {
+export const product = pgTable("product", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description"),
+  /** The single biggest goal — why the product exists. */
+  mission: text("mission"),
+  /** Distinct value propositions the product delivers (ordered list). */
+  benefits: text("benefits")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  /** Non-negotiable rules to follow while building the product. */
+  principles: text("principles")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+/** Product Requirements Document — markdown-authored spec belonging to a product.
+ * benefitIndex (nullable) links the PRD to a specific entry in product.benefits[]
+ * by position; null means "not tied to any single benefit". */
+export const prd = pgTable("prd", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  benefitIndex: integer("benefit_index"),
+  content: text("content").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

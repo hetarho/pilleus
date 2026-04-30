@@ -1,10 +1,10 @@
 import { createTRPCRouter } from "./shared/trpc/init";
 import { userRouter } from "./iam/interface/trpc/user.router";
-import { projectRouter } from "./project/interface/trpc/project.router";
+import { productRouter } from "./product/interface/trpc/product.router";
 
 export const appRouter = createTRPCRouter({
   user: userRouter,
-  project: projectRouter,
+  product: productRouter,
 });
 
 export type AppRouter = typeof appRouter;

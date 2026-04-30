@@ -5,9 +5,10 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate",
-    "db:push": "turbo run db:push"
+    "db:generate": "pnpm --filter @pilleus/db db:generate",
+    "db:migrate": "pnpm --filter @pilleus/db db:migrate",
+    "db:push": "pnpm --filter @pilleus/db db:push",
+    "db:seed": "pnpm --filter @pilleus/db db:seed"
   },
   "devDependencies": {
     "turbo": "^2"

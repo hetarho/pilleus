@@ -56,6 +56,18 @@ export {
 export { Separator } from "./separator";
 export { Skeleton } from "./skeleton";
 export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from "./table";
+export { Textarea } from "./textarea";
+export { Label } from "./label";
+export {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
