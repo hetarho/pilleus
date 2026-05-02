@@ -1,5 +1,6 @@
 import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
 import { Prd } from "../../domain/entities/prd";
+import { PRD_BOILERPLATE } from "../../domain/prd-boilerplate";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
 import { type PrdDTO, toPrdDTO } from "../dto/prd.dto";
@@ -32,6 +33,7 @@ export class CreatePrdUseCase {
       productId: input.productId,
       title: input.title,
       benefitIndex: input.benefitIndex ?? null,
+      content: PRD_BOILERPLATE,
     });
     await this.prds.save(prd);
     return toPrdDTO(prd);

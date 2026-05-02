@@ -22,6 +22,7 @@ export function OverviewView({ productId }: OverviewViewProps) {
   const [mission, setMission] = useState("");
   const [benefits, setBenefits] = useState<string[]>([""]);
   const [principles, setPrinciples] = useState<string[]>([""]);
+  const [actors, setActors] = useState<string[]>([""]);
 
   /* Hydrate local state from server data when it arrives. The form is
    * uncontrolled-ish: server is the source of truth on initial load and
@@ -32,6 +33,7 @@ export function OverviewView({ productId }: OverviewViewProps) {
     setMission(p.mission ?? "");
     setBenefits(p.benefits.length > 0 ? [...p.benefits] : [""]);
     setPrinciples(p.principles.length > 0 ? [...p.principles] : [""]);
+    setActors(p.actors.length > 0 ? [...p.actors] : [""]);
   }, [productQuery.data]);
 
   const updateMutation = useMutation(
@@ -52,6 +54,7 @@ export function OverviewView({ productId }: OverviewViewProps) {
       mission: mission.trim() || null,
       benefits: benefits.map((b) => b.trim()).filter(Boolean),
       principles: principles.map((p) => p.trim()).filter(Boolean),
+      actors: actors.map((a) => a.trim()).filter(Boolean),
     });
   };
 
@@ -85,6 +88,13 @@ export function OverviewView({ productId }: OverviewViewProps) {
         hint="Non-negotiable rules to follow while building this product."
       >
         <ListEditor items={principles} onChange={setPrinciples} placeholder="A principle" />
+      </FieldGroup>
+
+      <FieldGroup
+        label="Actors"
+        hint="Who or what interacts with this product (end user, admin, scheduler, ...). PRDs reference this list."
+      >
+        <ListEditor items={actors} onChange={setActors} placeholder="An actor" />
       </FieldGroup>
 
       <div className="flex items-center gap-3">

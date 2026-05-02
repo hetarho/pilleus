@@ -24,6 +24,7 @@ export class DrizzleProductRepository implements ProductRepository {
         mission: product.mission,
         benefits: [...product.benefits],
         principles: [...product.principles],
+        actors: [...product.actors],
         userId: product.userId,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
@@ -36,6 +37,7 @@ export class DrizzleProductRepository implements ProductRepository {
           mission: product.mission,
           benefits: [...product.benefits],
           principles: [...product.principles],
+          actors: [...product.actors],
           updatedAt: product.updatedAt,
         },
       });

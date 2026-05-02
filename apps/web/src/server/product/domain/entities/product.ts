@@ -8,6 +8,7 @@ interface ProductProps {
   mission: string | null;
   benefits: readonly string[];
   principles: readonly string[];
+  actors: readonly string[];
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +41,7 @@ export class Product extends AggregateRoot<string> {
       mission: null,
       benefits: [],
       principles: [],
+      actors: [],
       userId: input.userId,
       createdAt: now,
       updatedAt: now,
@@ -53,6 +55,7 @@ export class Product extends AggregateRoot<string> {
     mission: string | null;
     benefits: string[];
     principles: string[];
+    actors: string[];
     userId: string;
     createdAt: Date;
     updatedAt: Date;
@@ -64,6 +67,7 @@ export class Product extends AggregateRoot<string> {
       mission: raw.mission,
       benefits: raw.benefits,
       principles: raw.principles,
+      actors: raw.actors,
       userId: raw.userId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
@@ -90,6 +94,10 @@ export class Product extends AggregateRoot<string> {
     return this.props.principles;
   }
 
+  get actors(): readonly string[] {
+    return this.props.actors;
+  }
+
   get userId(): string {
     return this.props.userId;
   }
@@ -110,17 +118,19 @@ export class Product extends AggregateRoot<string> {
     this.props = { ...this.props, description: sanitizeOptional(description), updatedAt: new Date() };
   }
 
-  /** Replace the full overview (mission + benefits + principles) atomically. */
+  /** Replace the full overview (mission + benefits + principles + actors) atomically. */
   updateOverview(input: {
     mission: string | null;
     benefits: readonly string[];
     principles: readonly string[];
+    actors: readonly string[];
   }): void {
     this.props = {
       ...this.props,
       mission: sanitizeOptional(input.mission),
       benefits: sanitizeList(input.benefits),
       principles: sanitizeList(input.principles),
+      actors: sanitizeList(input.actors),
       updatedAt: new Date(),
     };
   }

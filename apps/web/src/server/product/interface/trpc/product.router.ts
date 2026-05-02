@@ -22,6 +22,7 @@ const updateOverviewInput = z.object({
   mission: z.string().nullable(),
   benefits: z.array(z.string()),
   principles: z.array(z.string()),
+  actors: z.array(z.string()),
 });
 
 export const productRouter = createTRPCRouter({

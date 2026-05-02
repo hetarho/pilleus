@@ -8,6 +8,7 @@ export interface UpdateProductOverviewInput {
   mission: string | null;
   benefits: string[];
   principles: string[];
+  actors: string[];
 }
 
 export class UpdateProductOverviewUseCase {
@@ -25,6 +26,7 @@ export class UpdateProductOverviewUseCase {
       mission: input.mission,
       benefits: input.benefits,
       principles: input.principles,
+      actors: input.actors,
     });
     await this.products.save(product);
     return toProductDTO(product);

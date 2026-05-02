@@ -23,6 +23,8 @@ const updateInput = z.object({
   title: z.string().min(1).max(200).optional(),
   benefitIndex: z.number().int().nonnegative().nullable().optional(),
   content: z.string().optional(),
+  status: z.enum(["draft", "published", "ai_reviewed"]).optional(),
+  aiReviewedContent: z.string().nullable().optional(),
 });
 const deleteInput = z.object({ id: z.string().uuid() });
 

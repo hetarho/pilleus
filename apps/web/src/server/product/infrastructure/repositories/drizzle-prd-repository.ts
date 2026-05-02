@@ -27,6 +27,8 @@ export class DrizzlePrdRepository implements PrdRepository {
         title: prd.title.value,
         benefitIndex: prd.benefitIndex,
         content: prd.content,
+        status: prd.status,
+        aiReviewedContent: prd.aiReviewedContent,
         createdAt: prd.createdAt,
         updatedAt: prd.updatedAt,
       })
@@ -36,6 +38,8 @@ export class DrizzlePrdRepository implements PrdRepository {
           title: prd.title.value,
           benefitIndex: prd.benefitIndex,
           content: prd.content,
+          status: prd.status,
+          aiReviewedContent: prd.aiReviewedContent,
           updatedAt: prd.updatedAt,
         },
       });

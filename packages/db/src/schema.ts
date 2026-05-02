@@ -77,6 +77,12 @@ export const product = pgTable("product", {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  /** Actors that interact with this product (end user, admin, scheduler, ...).
+   * Defined product-wide so PRDs can reference a stable list. */
+  actors: text("actors")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -86,7 +92,14 @@ export const product = pgTable("product", {
 
 /** Product Requirements Document — markdown-authored spec belonging to a product.
  * benefitIndex (nullable) links the PRD to a specific entry in product.benefits[]
- * by position; null means "not tied to any single benefit". */
+ * by position; null means "not tied to any single benefit".
+ *
+ * Lifecycle (status):
+ *   draft        — author is filling the form (PrdFormView, free-form Korean answers)
+ *   published    — markdown is frozen for direct editing (MarkdownEditor view)
+ *   ai_reviewed  — diff view: `content` is the published version (left, read-only),
+ *                  `aiReviewedContent` is the AI's revision (right, editable)
+ */
 export const prd = pgTable("prd", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   productId: text("product_id")
@@ -95,6 +108,10 @@ export const prd = pgTable("prd", {
   title: text("title").notNull(),
   benefitIndex: integer("benefit_index"),
   content: text("content").notNull().default(""),
+  status: text("status").notNull().default("draft"),
+  /** AI-revised body, populated when entering ai_reviewed status. Null in
+   * draft / published. */
+  aiReviewedContent: text("ai_reviewed_content"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
