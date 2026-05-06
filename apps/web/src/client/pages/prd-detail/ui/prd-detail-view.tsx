@@ -9,6 +9,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { MarkdownEditor } from "@/shared/ui/markdown-editor";
+import { MarkdownRenderer } from "@/shared/ui/markdown-renderer";
 import { cn } from "@/shared/lib";
 import { productSectionHref } from "@/entities/product";
 import { CopyPromptButton } from "@/features/prd-prompt-copy";
@@ -161,17 +162,18 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
               {isEditing ? "완료" : "수정"}
             </Button>
           </div>
-          <div className="bg-card">
-            {/* key forces a remount when toggling so MDXEditor re-runs its
-             * markdown→Lexical bootstrap with the latest content + readOnly
-             * value (it doesn't react to readOnly changes after mount). */}
-            <MarkdownEditor
-              key={isEditing ? "edit" : "read"}
-              markdown={content}
-              onChange={setContent}
-              readOnly={!isEditing}
-            />
-          </div>
+          {/* Read mode renders as a styled document (prose); edit mode swaps
+           * to the live MDX editor. They're separate components so toggling
+           * doesn't fight MDXEditor's mount-time readOnly bootstrap. */}
+          {isEditing ? (
+            <div className="bg-card">
+              <MarkdownEditor markdown={content} onChange={setContent} />
+            </div>
+          ) : (
+            <div className="bg-card p-8">
+              <MarkdownRenderer markdown={content} />
+            </div>
+          )}
         </div>
       )}
       {content && status === "ai_reviewed" && (

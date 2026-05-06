@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "./color.css";
 
+/* Typography plugin — provides the `prose` utility used by the read-mode
+ * markdown renderer (PRD published view). */
+@plugin "@tailwindcss/typography";
+
 /* Class-based dark mode (Tailwind v4 selector variant).
  * Activates `.dark` ancestor selector — toggle via <html class="dark">. */
 @custom-variant dark (&:where(.dark, .dark *));
