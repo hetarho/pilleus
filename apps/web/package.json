@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @pilleus/db db:seed && next dev --turbopack",
+    "dev": "next dev --turbopack",
     "build": "pnpm --filter @pilleus/db db:migrate:deploy && next build",
     "start": "next start",
     "lint": "next lint"

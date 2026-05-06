@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/
 import { Prd } from "../../domain/entities/prd";
 import { PRD_BOILERPLATE } from "../../domain/prd-boilerplate";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
+import type { PrdVersionRepository } from "../../domain/repositories/prd-version-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
 import { type PrdDTO, toPrdDTO } from "../dto/prd.dto";
 
@@ -16,6 +17,7 @@ export class CreatePrdUseCase {
   constructor(
     private readonly products: ProductRepository,
     private readonly prds: PrdRepository,
+    private readonly versions: PrdVersionRepository,
   ) {}
 
   async execute(input: CreatePrdInput): Promise<PrdDTO> {
@@ -36,6 +38,17 @@ export class CreatePrdUseCase {
       content: PRD_BOILERPLATE,
     });
     await this.prds.save(prd);
+    /* Seed version 1 — the pristine boilerplate state. The history panel
+     * thus always has at least one entry to compare against. */
+    await this.versions.save({
+      prdId: prd.id,
+      version: 1,
+      title: prd.title.value,
+      benefitIndex: prd.benefitIndex,
+      content: prd.content,
+      status: prd.status,
+      aiReviewedContent: prd.aiReviewedContent,
+    });
     return toPrdDTO(prd);
   }
 }

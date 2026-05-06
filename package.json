@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "node scripts/dev.mjs",
     "lint": "turbo run lint",
     "db:generate": "pnpm --filter @pilleus/db db:generate",
     "db:migrate": "pnpm --filter @pilleus/db db:migrate",

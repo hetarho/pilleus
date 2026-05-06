@@ -116,6 +116,27 @@ export const prd = pgTable("prd", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+/** Append-only history of PRD snapshots. One row is written after every
+ * Create / Update use case execution (full state, not diff). The `version`
+ * column is per-PRD sequential — version 1 is the state right after creation.
+ *
+ * Storing full content (rather than diffs) keeps lookups trivial; the cost
+ * is fine at PRD-sized markdown blobs. Optimize later if it actually grows. */
+export const prdVersion = pgTable("prd_version", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  prdId: text("prd_id")
+    .notNull()
+    .references(() => prd.id, { onDelete: "cascade" }),
+  /** 1-based, monotonic per `prdId`. */
+  version: integer("version").notNull(),
+  title: text("title").notNull(),
+  benefitIndex: integer("benefit_index"),
+  content: text("content").notNull(),
+  status: text("status").notNull(),
+  aiReviewedContent: text("ai_reviewed_content"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ── OAuth Provider tables ───────────────────────────────────────────
 
 export const oauthApplication = pgTable("oauth_application", {

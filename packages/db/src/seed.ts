@@ -23,7 +23,7 @@ import { dirname, resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/neon-http";
-import { prd, product, user } from "./schema";
+import { prd, prdVersion, product, user } from "./schema";
 
 config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web/.env"),
@@ -137,8 +137,11 @@ const PRD_IDS = {
   specLinking: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
   aiDrafting: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2",
   consistency: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3",
+  search: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4",
+  versionHistory: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5",
   hyperlocal: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
   severeAlerts: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+  alertThrottle: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3",
 } as const;
 
 /* ── PRD 답변 시드 ─────────────────────────────────────────────
@@ -184,6 +187,29 @@ const ANSWERS_SEVERE_ALERTS: string[] = [
   "특보는 정부 기관에서 발표되지만 사용자가 별도 채널로 확인해야 한다. 외출 중이거나 야외 작업 중일 때 모르고 지나치는 경우가 많다.",
   "특보 발효 후 짧은 시간 안에 사용자에게 알림이 도달하고, 알림 옵트인율도 일정 수준 이상으로 유지되는 게 목표.",
   "알림 스케줄러가 기상 데이터 제공자로부터 특보를 실시간으로 받아, 사용자의 현재 위치(또는 등록한 관심 지역)에 해당하는 특보만 필터링해 푸시한다. 알림은 \"폭우 특보 발효 - 강남구\" 형태로 핵심만 짧게 보여주고, 탭하면 앱이 열리며 특보 상세 화면으로 이동한다. 사용자는 알림 설정에서 특보 종류별(폭우 / 홍수 / 폭염 / 강풍 등)로 on/off 할 수 있다.",
+];
+
+/* 아직 작성 초기 단계인 PRD들 — 일부 섹션은 비워서 form 미입력 상태도 시연. */
+
+const ANSWERS_SEARCH: string[] = [
+  "product 안의 모든 PRD·정책·entity·element·user story를 한 번에 검색할 수 있는 시맨틱 서치 기능. 키워드 매칭이 아니라 의미 기반.",
+  "product에 문서가 쌓이면 PM이 \"비슷한 기능을 전에 어디에 적었더라\"를 찾기 어려워진다. 키워드 검색은 동의어·재정의된 용어를 못 잡는다.",
+  "",
+  "",
+];
+
+const ANSWERS_VERSION_HISTORY: string[] = [
+  "PRD가 발행된 시점마다 스냅샷을 저장해, 이후에 \"언제 어떻게 바뀌었는지\" 시간순으로 볼 수 있게 한다.",
+  "",
+  "",
+  "",
+];
+
+const ANSWERS_ALERT_THROTTLE: string[] = [
+  "기상 특보 알림이 너무 자주 와서 사용자가 옵트아웃하지 않도록, 같은 종류의 특보는 시간 단위로 묶어 한 번만 알리는 throttle 기능.",
+  "장마철에 폭우 특보가 30분 단위로 갱신되면서 알림이 분 단위로 쏟아지는 일이 있었다. 사용자 리포트로 옵트아웃이 늘었다는 신호.",
+  "특보 종류별로 합리적인 throttle 간격을 정해, 알림 전체 빈도를 일정 수준 이하로 억제한다. 동시에 진짜 새로운 특보(다른 종류 / 지역 변경)는 즉시 도달하도록.",
+  "",
 ];
 
 async function main() {
@@ -265,6 +291,22 @@ async function main() {
       status: "published",
     },
     {
+      id: PRD_IDS.search,
+      productId: PRODUCT_IDS.pilleus,
+      title: "시맨틱 검색",
+      benefitIndex: 0,
+      content: buildPrdContent(ANSWERS_SEARCH),
+      status: "draft",
+    },
+    {
+      id: PRD_IDS.versionHistory,
+      productId: PRODUCT_IDS.pilleus,
+      title: "버전 히스토리",
+      benefitIndex: null,
+      content: buildPrdContent(ANSWERS_VERSION_HISTORY),
+      status: "draft",
+    },
+    {
       id: PRD_IDS.hyperlocal,
       productId: PRODUCT_IDS.weather,
       title: "초정밀 지역 예보 위젯",
@@ -280,9 +322,65 @@ async function main() {
       content: buildPrdContent(ANSWERS_SEVERE_ALERTS),
       status: "published",
     },
+    {
+      id: PRD_IDS.alertThrottle,
+      productId: PRODUCT_IDS.weather,
+      title: "특보 알림 빈도 제한",
+      benefitIndex: 1,
+      content: buildPrdContent(ANSWERS_ALERT_THROTTLE),
+      status: "draft",
+    },
   ]);
 
-  console.log("[seed] done — 2 products, 5 prds");
+  /* Seed a few version snapshots on `aiDrafting` so the history panel has
+   * something to show out of the box. Three versions show the typical
+   * arc: pristine boilerplate → first form input → published markdown. */
+  const aiDraftingV1Content = buildPrdContent(["", "", "", ""]);
+  const aiDraftingV2Content = buildPrdContent([
+    "PM이 한 줄 목표만 입력하면 LLM이 PRD 초안을 만들어주는 기능.",
+    "",
+    "",
+    "",
+  ]);
+  const aiDraftingV3Content = buildPrdContent(ANSWERS_AI_DRAFTING);
+
+  await db.insert(prdVersion).values([
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-ccccccccccc1",
+      prdId: PRD_IDS.aiDrafting,
+      version: 1,
+      title: "AI 보조 PRD 초안 작성",
+      benefitIndex: 1,
+      content: aiDraftingV1Content,
+      status: "draft",
+      aiReviewedContent: null,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-ccccccccccc2",
+      prdId: PRD_IDS.aiDrafting,
+      version: 2,
+      title: "AI 보조 PRD 초안 작성",
+      benefitIndex: 1,
+      content: aiDraftingV2Content,
+      status: "draft",
+      aiReviewedContent: null,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-ccccccccccc3",
+      prdId: PRD_IDS.aiDrafting,
+      version: 3,
+      title: "AI 보조 PRD 초안 작성",
+      benefitIndex: 1,
+      content: aiDraftingV3Content,
+      status: "draft",
+      aiReviewedContent: null,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60),
+    },
+  ]);
+
+  console.log("[seed] done — 2 products, 8 prds, 3 versions on aiDrafting");
 }
 
 main().catch((err) => {

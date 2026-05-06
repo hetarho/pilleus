@@ -15,6 +15,7 @@ import { productSectionHref } from "@/entities/product";
 import { CopyPromptButton } from "@/features/prd-prompt-copy";
 import { PrdFormView } from "@/features/prd-form-view";
 import { PublishDialog } from "@/features/prd-publish";
+import { HistoryPanel } from "@/features/prd-history";
 
 type PrdStatus = "draft" | "published" | "ai_reviewed";
 
@@ -116,7 +117,14 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
           Back to PRDs
         </Link>
 
-        <StatusBadge status={status} />
+        <div className="flex items-center gap-3">
+          <HistoryPanel
+            prdId={prdId}
+            currentContent={content}
+            onRestore={(restored) => setContent(restored)}
+          />
+          <StatusBadge status={status} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
