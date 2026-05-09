@@ -1,4 +1,4 @@
-import { db, desc, eq, rawSql } from "@pilleus/db";
+import { db, desc, eq, inArray, rawSql } from "@pilleus/db";
 import { prdVersion as prdVersionTable } from "@pilleus/db/schema";
 import type { PrdStatus } from "../../domain/entities/prd";
 import type {
@@ -52,6 +52,21 @@ export class DrizzlePrdVersionRepository implements PrdVersionRepository {
       .from(prdVersionTable)
       .where(eq(prdVersionTable.prdId, prdId));
     return rows[0]?.max ?? 0;
+  }
+
+  async latestVersionNumbersByPrdIds(
+    prdIds: readonly string[],
+  ): Promise<Record<string, number>> {
+    if (prdIds.length === 0) return {};
+    const rows = await db
+      .select({
+        prdId: prdVersionTable.prdId,
+        max: rawSql<number>`max(${prdVersionTable.version})`,
+      })
+      .from(prdVersionTable)
+      .where(inArray(prdVersionTable.prdId, [...prdIds]))
+      .groupBy(prdVersionTable.prdId);
+    return Object.fromEntries(rows.map((r) => [r.prdId, r.max] as const));
   }
 
   async save(

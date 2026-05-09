@@ -19,5 +19,8 @@ export interface PrdVersionRepository {
   findById(id: string): Promise<PrdVersionSnapshot | null>;
   /** Returns the most recently appended version, used for sequence calc. */
   latestVersionNumber(prdId: string): Promise<number>;
+  /** Batch variant — one query for many PRDs, used by list views. Returns
+   * a map keyed by prdId; missing entries (no versions yet) are omitted. */
+  latestVersionNumbersByPrdIds(prdIds: readonly string[]): Promise<Record<string, number>>;
   save(snapshot: Omit<PrdVersionSnapshot, "id" | "createdAt">): Promise<PrdVersionSnapshot>;
 }

@@ -19,6 +19,8 @@ export interface PrdListItemDTO {
   title: string;
   benefitIndex: number | null;
   status: PrdStatus;
+  /** Latest version number for this PRD (null when no snapshots yet). */
+  latestVersion: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,12 +37,13 @@ export const toPrdDTO = (prd: Prd): PrdDTO => ({
   updatedAt: prd.updatedAt,
 });
 
-export const toPrdListItemDTO = (prd: Prd): PrdListItemDTO => ({
+export const toPrdListItemDTO = (prd: Prd, latestVersion: number | null = null): PrdListItemDTO => ({
   id: prd.id,
   productId: prd.productId,
   title: prd.title.value,
   benefitIndex: prd.benefitIndex,
   status: prd.status,
+  latestVersion,
   createdAt: prd.createdAt,
   updatedAt: prd.updatedAt,
 });

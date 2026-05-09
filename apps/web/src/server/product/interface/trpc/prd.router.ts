@@ -52,7 +52,7 @@ const versionsRouter = createTRPCRouter({
 
 export const prdRouter = createTRPCRouter({
   list: protectedProcedure.input(listInput).query(({ ctx, input }) =>
-    new ListPrdsUseCase(productRepo, prdRepo).execute({
+    new ListPrdsUseCase(productRepo, prdRepo, versionRepo).execute({
       productId: input.productId,
       userId: ctx.user.id,
     }),

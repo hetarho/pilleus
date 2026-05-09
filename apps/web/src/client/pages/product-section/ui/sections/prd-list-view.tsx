@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/shared/api/trpc/client";
 import { CreatePrdDialog } from "@/features/prd-create";
 import { Button } from "@/shared/ui/button";
+import { cn } from "@/shared/lib";
 import {
   Table,
   TableBody,
@@ -18,6 +19,12 @@ import {
 interface PrdListViewProps {
   productId: string;
 }
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "초안",
+  published: "발행",
+  ai_reviewed: "AI 리뷰",
+};
 
 export function PrdListView({ productId }: PrdListViewProps) {
   const trpc = useTRPC();
@@ -41,8 +48,10 @@ export function PrdListView({ productId }: PrdListViewProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40%]">Title</TableHead>
-              <TableHead className="w-[40%]">Benefit</TableHead>
+              <TableHead className="w-[35%]">Title</TableHead>
+              <TableHead className="w-[30%]">Benefit</TableHead>
+              <TableHead className="w-[15%]">Status</TableHead>
+              <TableHead className="w-[10%]">Version</TableHead>
               <TableHead>ID</TableHead>
             </TableRow>
           </TableHeader>
@@ -68,6 +77,23 @@ export function PrdListView({ productId }: PrdListViewProps) {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {benefit ?? <span className="opacity-40">—</span>}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        prd.status === "draft" && "bg-muted text-muted-foreground",
+                        prd.status === "published" && "bg-primary/15 text-primary",
+                        prd.status === "ai_reviewed" && "bg-accent text-accent-foreground",
+                      )}
+                    >
+                      {STATUS_LABEL[prd.status] ?? prd.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {prd.latestVersion != null ? `v${prd.latestVersion}` : (
+                      <span className="opacity-40">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {prd.id.slice(0, 8)}
