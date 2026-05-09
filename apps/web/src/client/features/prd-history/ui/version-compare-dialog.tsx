@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,14 @@ interface VersionCompareDialogProps {
 
 /** Full-screen-ish dialog showing a line-aligned diff between two PRD bodies.
  *
- * Layout: side-by-side grid, removed rows tinted red on the left, added rows
- * green on the right, unchanged rows neutral on both. Both sides are
- * read-only — comparing past states is the use case here, not editing. */
+ * Layout: each diff row is one flex container that holds left + right
+ * cells. We used to lay this out via `grid grid-cols-2` with auto-placement
+ * but that produced overlapping text on long Korean lines once cells
+ * wrapped to very different heights — the grid row height tracked the
+ * tallest cell but the cells themselves rendered with their own intrinsic
+ * heights, which on overflow drew on top of the next row. Per-row flex
+ * containers give each diff row its own block, so wrapping never bleeds
+ * into the next pair. */
 export function VersionCompareDialog({
   open,
   onOpenChange,
@@ -51,21 +56,21 @@ export function VersionCompareDialog({
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-card">
-          <div className="grid grid-cols-2 border-b text-xs font-semibold text-muted-foreground">
-            <div className="px-3 py-1.5">{leftLabel}</div>
-            <div className="border-l px-3 py-1.5">{rightLabel}</div>
+          <div className="flex border-b text-xs font-semibold text-muted-foreground">
+            <div className="flex-1 px-3 py-1.5">{leftLabel}</div>
+            <div className="flex-1 border-l px-3 py-1.5">{rightLabel}</div>
           </div>
-          <div className="grid min-h-0 flex-1 grid-cols-2 overflow-y-auto font-mono text-xs leading-relaxed">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto font-mono text-xs leading-relaxed">
             {rows.length === 0 ? (
-              <div className="col-span-2 px-3 py-4 text-center text-muted-foreground">
+              <div className="px-3 py-4 text-center text-muted-foreground">
                 두 버전이 동일합니다.
               </div>
             ) : (
               rows.map((row, i) => (
-                <Fragment key={i}>
+                <div key={i} className="flex items-stretch">
                   <div
                     className={cn(
-                      "min-h-[1.5em] whitespace-pre-wrap break-all px-3 py-0.5",
+                      "min-w-0 flex-1 whitespace-pre-wrap wrap-break-word px-3 py-0.5",
                       row.status === "removed" &&
                         "bg-red-500/15 text-red-700 dark:text-red-300",
                     )}
@@ -74,14 +79,14 @@ export function VersionCompareDialog({
                   </div>
                   <div
                     className={cn(
-                      "min-h-[1.5em] whitespace-pre-wrap break-all border-l px-3 py-0.5",
+                      "min-w-0 flex-1 whitespace-pre-wrap wrap-break-word border-l px-3 py-0.5",
                       row.status === "added" &&
                         "bg-green-500/15 text-green-700 dark:text-green-300",
                     )}
                   >
                     {row.right ?? " "}
                   </div>
-                </Fragment>
+                </div>
               ))
             )}
           </div>
