@@ -107,7 +107,7 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
   }
 
   return (
-    <main className="mx-auto flex max-w-4xl flex-col gap-6 p-8">
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-8">
       <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <Link
           href={productSectionHref(productId, "prd")}
@@ -170,11 +170,8 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
               {isEditing ? "완료" : "수정"}
             </Button>
           </div>
-          {/* Read mode renders as a styled document (prose); edit mode swaps
-           * to the live MDX editor. They're separate components so toggling
-           * doesn't fight MDXEditor's mount-time readOnly bootstrap. */}
           {isEditing ? (
-            <div className="bg-card">
+            <div className="bg-card p-8">
               <MarkdownEditor markdown={content} onChange={setContent} />
             </div>
           ) : (

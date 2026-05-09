@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pilleus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pilleus
+      POSTGRES_PASSWORD: pilleus
+      POSTGRES_DB: pilleus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pilleus-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pilleus -d pilleus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pilleus-postgres-data:
