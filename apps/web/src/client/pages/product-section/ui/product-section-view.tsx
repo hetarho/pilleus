@@ -21,7 +21,7 @@ export function ProductSectionView({ productId, sectionId }: ProductSectionViewP
     case "prd":
       return <PrdListView productId={productId} />;
     default:
-      // policy / data / element / user-story — not yet implemented
+      // policy / design / ux / element / user-story — not yet implemented
       return <SectionPlaceholder productId={productId} sectionId={id} />;
   }
 }

@@ -1,9 +1,10 @@
 import {
   Boxes,
-  Database,
   FileText,
   LayoutDashboard,
+  Palette,
   ShieldCheck,
+  Sparkles,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -12,7 +13,8 @@ export type ProductSectionId =
   | "overview"
   | "prd"
   | "policy"
-  | "data"
+  | "design"
+  | "ux"
   | "element"
   | "user-story";
 
@@ -26,7 +28,8 @@ export const PRODUCT_SECTIONS: readonly ProductSection[] = [
   { id: "overview",   label: "Overview",   icon: LayoutDashboard },
   { id: "prd",        label: "PRD",        icon: FileText },
   { id: "policy",     label: "Policy",     icon: ShieldCheck },
-  { id: "data",       label: "Data",       icon: Database },
+  { id: "design",     label: "Design",     icon: Palette },
+  { id: "ux",         label: "UX",         icon: Sparkles },
   { id: "element",    label: "Element",    icon: Boxes },
   { id: "user-story", label: "User Story", icon: Users },
 ] as const;
