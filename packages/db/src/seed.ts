@@ -24,7 +24,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { prd, prdVersion, product, user } from "./schema";
+import { palette, prd, prdVersion, product, user } from "./schema";
 
 config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web/.env"),
@@ -394,9 +394,10 @@ const ANSWERS_ALERT_THROTTLE: string[] = [
 ];
 
 async function main() {
-  console.log("[seed] wiping product + prd ...");
-  // prd has FK to product with onDelete cascade; explicit delete first
-  // to keep the order obvious regardless of driver behavior.
+  console.log("[seed] wiping product + prd + palette ...");
+  // prd / palette have FK to product with onDelete cascade; explicit delete
+  // first to keep the order obvious regardless of driver behavior.
+  await db.delete(palette);
   await db.delete(prd);
   await db.delete(product);
 
@@ -634,8 +635,50 @@ async function main() {
   ];
   await db.insert(prdVersion).values(explicitVersionRows);
 
+  /* Seed a few palettes per product so the Design view isn't empty on a
+   * fresh seed. Names mirror common palette usage (red/blue/neutral) — the
+   * 50..950 ramp is computed at read time from these seeds. */
+  const paletteRows = [
+    {
+      id: "11111111-1111-4111-8111-aaaaaaaaaaa1",
+      productId: PRODUCT_IDS.pilleus,
+      name: "brand",
+      seedHex: "#4f46e5",
+      position: 0,
+    },
+    {
+      id: "11111111-1111-4111-8111-aaaaaaaaaaa2",
+      productId: PRODUCT_IDS.pilleus,
+      name: "neutral",
+      seedHex: "#71717a",
+      position: 1,
+    },
+    {
+      id: "11111111-1111-4111-8111-aaaaaaaaaaa3",
+      productId: PRODUCT_IDS.pilleus,
+      name: "accent",
+      seedHex: "#10b981",
+      position: 2,
+    },
+    {
+      id: "22222222-2222-4222-8222-bbbbbbbbbbb1",
+      productId: PRODUCT_IDS.weather,
+      name: "sky",
+      seedHex: "#0ea5e9",
+      position: 0,
+    },
+    {
+      id: "22222222-2222-4222-8222-bbbbbbbbbbb2",
+      productId: PRODUCT_IDS.weather,
+      name: "warning",
+      seedHex: "#f59e0b",
+      position: 1,
+    },
+  ];
+  await db.insert(palette).values(paletteRows);
+
   console.log(
-    `[seed] done — 2 products, ${prdRows.length} prds, ${autoVersionRows.length + explicitVersionRows.length} versions`,
+    `[seed] done — 2 products, ${prdRows.length} prds, ${autoVersionRows.length + explicitVersionRows.length} versions, ${paletteRows.length} palettes`,
   );
 }
 

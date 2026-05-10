@@ -137,6 +137,28 @@ export const prdVersion = pgTable("prd_version", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/** Color palette belonging to a product. The seed is the only persisted
+ * color value — the 50..950 Tailwind-style shade scale is derived from it
+ * on read by lightness-interpolating in OKLCH space, so changing the seed
+ * automatically refreshes every dependent design token without a write.
+ *
+ * `position` is a per-product display order (0-based) so palettes appear in
+ * a stable layout. Names are user-defined ("red", "neutral", "brand", ...) —
+ * design tokens reference palettes by id, not by name. */
+export const palette = pgTable("palette", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  /** Seed color, lowercase 7-char hex (e.g. "#4f46e5"). Domain layer is the
+   * source of truth for the format; column is just text. */
+  seedHex: text("seed_hex").notNull(),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // ── OAuth Provider tables ───────────────────────────────────────────
 
 export const oauthApplication = pgTable("oauth_application", {
