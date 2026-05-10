@@ -1,10 +1,17 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/shared/api/trpc/client";
-import { PaletteEditDialog } from "@/features/palette-edit/ui/palette-edit-dialog";
+import {
+  TOKEN_GROUPS,
+  TOKEN_GROUP_HINTS,
+  TOKEN_GROUP_LABELS,
+  type TokenGroup,
+} from "@/entities/design-token";
 import { CopyDesignMdButton } from "@/features/design-md-copy/ui/copy-design-md-button";
+import { DesignTokenEditDialog } from "@/features/design-token-edit/ui/design-token-edit-dialog";
+import { PaletteEditDialog } from "@/features/palette-edit/ui/palette-edit-dialog";
 import { Button } from "@/shared/ui/button";
 
 interface DesignViewProps {
@@ -16,17 +23,39 @@ export function DesignView({ productId }: DesignViewProps) {
   const queryClient = useQueryClient();
   const productQuery = useQuery(trpc.product.get.queryOptions({ id: productId }));
   const palettesQuery = useQuery(trpc.design.palette.list.queryOptions({ productId }));
+  const tokensQuery = useQuery(trpc.design.token.list.queryOptions({ productId }));
 
-  const deleteMutation = useMutation(
+  const invalidatePalettes = () =>
+    queryClient.invalidateQueries({
+      queryKey: trpc.design.palette.list.queryKey({ productId }),
+    });
+  const invalidateTokens = () =>
+    queryClient.invalidateQueries({
+      queryKey: trpc.design.token.list.queryKey({ productId }),
+    });
+
+  const deletePaletteMutation = useMutation(
     trpc.design.palette.delete.mutationOptions({
-      onSuccess: () =>
-        queryClient.invalidateQueries({
-          queryKey: trpc.design.palette.list.queryKey({ productId }),
-        }),
+      onSuccess: () => {
+        invalidatePalettes();
+        /* Color tokens reference palettes; deleting one nulls those refs in
+         * the DB (FK ON DELETE SET NULL), so refresh the token list too so
+         * broken refs surface immediately. */
+        invalidateTokens();
+      },
     }),
   );
 
+  const deleteTokenMutation = useMutation(
+    trpc.design.token.delete.mutationOptions({ onSuccess: invalidateTokens }),
+  );
+
+  const seedDefaultsMutation = useMutation(
+    trpc.design.palette.seedDefaults.mutationOptions({ onSuccess: invalidatePalettes }),
+  );
+
   const palettes = palettesQuery.data ?? [];
+  const tokens = tokensQuery.data ?? [];
 
   return (
     <main className="mx-auto w-full max-w-5xl p-8">
@@ -44,10 +73,19 @@ export function DesignView({ productId }: DesignViewProps) {
             seedHex: p.seedHex,
             shades: p.shades,
           }))}
+          tokens={tokens.map((t) => ({
+            group: t.group,
+            name: t.name,
+            paletteName: t.paletteName,
+            paletteStep: t.paletteStep,
+            hex: t.hex,
+            rawValue: t.rawValue,
+          }))}
         />
       </header>
 
-      <section className="flex flex-col gap-3">
+      {/* ── Palettes ─────────────────────────────────────── */}
+      <section className="mb-10 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Palettes</h2>
           <PaletteEditDialog
@@ -64,8 +102,22 @@ export function DesignView({ productId }: DesignViewProps) {
         {palettesQuery.isPending ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : palettes.length === 0 ? (
-          <div className="rounded-md border border-dashed bg-card/50 p-12 text-center text-sm text-muted-foreground">
-            아직 팔레트가 없습니다. 빨강·파랑·neutral 같이 product에서 쓸 색상별로 하나씩 만들어보세요.
+          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed bg-card/50 p-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              아직 팔레트가 없습니다. 빨강·파랑·neutral 같이 product에서 쓸 색상별로 하나씩 만들어보세요.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={seedDefaultsMutation.isPending}
+              onClick={() => seedDefaultsMutation.mutate({ productId })}
+            >
+              <Sparkles className="size-4" />
+              {seedDefaultsMutation.isPending
+                ? "추가 중..."
+                : "기본 팔레트로 시작 (brand / neutral / accent)"}
+            </Button>
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -97,7 +149,7 @@ export function DesignView({ productId }: DesignViewProps) {
                     aria-label={`Delete palette ${p.name}`}
                     onClick={() => {
                       if (confirm(`Delete palette "${p.name}"?`)) {
-                        deleteMutation.mutate({ id: p.id });
+                        deletePaletteMutation.mutate({ id: p.id });
                       }
                     }}
                   >
@@ -123,6 +175,135 @@ export function DesignView({ productId }: DesignViewProps) {
           </ul>
         )}
       </section>
+
+      {/* ── Token sections (one per group) ──────────────── */}
+      {TOKEN_GROUPS.map((group) => {
+        const inGroup = tokens.filter((t) => t.group === group);
+        return (
+          <section key={group} className="mb-10 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">{TOKEN_GROUP_LABELS[group]}</h2>
+                <p className="text-xs text-muted-foreground">{TOKEN_GROUP_HINTS[group]}</p>
+              </div>
+              <DesignTokenEditDialog
+                productId={productId}
+                group={group}
+                palettes={palettes.map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                  shades: p.shades,
+                }))}
+                trigger={
+                  <Button size="sm" variant="outline">
+                    <Plus className="size-4" />
+                    Add
+                  </Button>
+                }
+              />
+            </div>
+            {tokensQuery.isPending ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : inGroup.length === 0 ? (
+              <div className="rounded-md border border-dashed bg-card/30 p-6 text-center text-xs text-muted-foreground">
+                아직 토큰이 없습니다.
+              </div>
+            ) : (
+              <ul className="divide-y rounded-md border bg-card">
+                {inGroup.map((t) => (
+                  <TokenRow
+                    key={t.id}
+                    productId={productId}
+                    group={group}
+                    token={t}
+                    palettes={palettes.map((p) => ({
+                      id: p.id,
+                      name: p.name,
+                      shades: p.shades,
+                    }))}
+                    onDelete={() => {
+                      if (confirm(`Delete token "${t.name}"?`)) {
+                        deleteTokenMutation.mutate({ id: t.id });
+                      }
+                    }}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
     </main>
+  );
+}
+
+interface TokenRowProps {
+  productId: string;
+  group: TokenGroup;
+  token: {
+    id: string;
+    name: string;
+    paletteId: string | null;
+    paletteStep: number | null;
+    paletteName: string | null;
+    hex: string | null;
+    rawValue: string | null;
+  };
+  palettes: { id: string; name: string; shades: { step: number; hex: string }[] }[];
+  onDelete: () => void;
+}
+
+function TokenRow({ productId, group, token, palettes, onDelete }: TokenRowProps) {
+  const isColor = group === "color";
+  const reference = isColor
+    ? token.paletteName !== null && token.paletteStep !== null
+      ? `${token.paletteName}.${token.paletteStep}`
+      : "(broken)"
+    : token.rawValue ?? "";
+
+  return (
+    <li className="flex items-center gap-3 px-4 py-2.5">
+      <DesignTokenEditDialog
+        productId={productId}
+        group={group}
+        palettes={palettes}
+        token={token}
+        trigger={
+          <button
+            type="button"
+            className="flex flex-1 items-center gap-3 text-left hover:underline"
+          >
+            <span className="min-w-32 font-medium">{token.name}</span>
+            {isColor && token.hex && (
+              <span
+                className="size-5 shrink-0 rounded border"
+                style={{ backgroundColor: token.hex }}
+                aria-hidden
+              />
+            )}
+            <span
+              className={
+                "flex-1 truncate font-mono text-xs " +
+                (isColor && !token.hex
+                  ? "text-destructive"
+                  : "text-muted-foreground")
+              }
+            >
+              {reference}
+              {isColor && token.hex ? ` · ${token.hex}` : ""}
+            </span>
+          </button>
+        }
+      />
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        aria-label={`Delete token ${token.name}`}
+        onClick={onDelete}
+      >
+        <Trash2 className="size-4" />
+      </Button>
+    </li>
   );
 }

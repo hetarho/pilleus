@@ -3,14 +3,15 @@
 import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui/button";
-import { buildDesignMd, type PaletteForMd } from "../lib/build-design-md";
+import { buildDesignMd, type PaletteForMd, type TokenForMd } from "../lib/build-design-md";
 
 interface CopyDesignMdButtonProps {
   productName: string;
   palettes: PaletteForMd[];
+  tokens: TokenForMd[];
 }
 
-export function CopyDesignMdButton({ productName, palettes }: CopyDesignMdButtonProps) {
+export function CopyDesignMdButton({ productName, palettes, tokens }: CopyDesignMdButtonProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export function CopyDesignMdButton({ productName, palettes }: CopyDesignMdButton
   }, [copied]);
 
   const handleCopy = async () => {
-    const md = buildDesignMd({ productName, palettes });
+    const md = buildDesignMd({ productName, palettes, tokens });
     await navigator.clipboard.writeText(md);
     setCopied(true);
   };

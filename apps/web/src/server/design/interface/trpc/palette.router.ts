@@ -4,6 +4,7 @@ import { DrizzleProductRepository } from "../../../product/infrastructure/reposi
 import { CreatePaletteUseCase } from "../../application/use-cases/create-palette";
 import { DeletePaletteUseCase } from "../../application/use-cases/delete-palette";
 import { ListPalettesUseCase } from "../../application/use-cases/list-palettes";
+import { SeedDefaultPalettesUseCase } from "../../application/use-cases/seed-default-palettes";
 import { UpdatePaletteUseCase } from "../../application/use-cases/update-palette";
 import { DrizzlePaletteRepository } from "../../infrastructure/repositories/drizzle-palette-repository";
 
@@ -58,4 +59,13 @@ export const paletteRouter = createTRPCRouter({
     });
     return { success: true as const };
   }),
+
+  /** One-shot helper used by the empty Design view's "기본 팔레트로 시작
+   * 하기" affordance — seeds brand / neutral / accent. */
+  seedDefaults: protectedProcedure.input(productIdInput).mutation(({ ctx, input }) =>
+    new SeedDefaultPalettesUseCase(palettes, products).execute({
+      productId: input.productId,
+      userId: ctx.user.id,
+    }),
+  ),
 });

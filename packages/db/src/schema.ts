@@ -159,6 +159,38 @@ export const palette = pgTable("palette", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+/** Design tokens — semantic aliases that downstream UI reads from.
+ *
+ * `group` discriminates the value shape:
+ *   color       → (paletteId, paletteStep) MUST be set, rawValue null.
+ *   non-color   → rawValue is the source of truth; palette fields null.
+ *
+ * The constraint is enforced in the domain layer (DesignToken entity), not
+ * by Postgres CHECK constraints — keeping schema dialect-portable and the
+ * invariant in one place. `position` is a per-(productId, group) display
+ * order. */
+export const designToken = pgTable("design_token", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  group: text("group").notNull(),
+  name: text("name").notNull(),
+  position: integer("position").notNull().default(0),
+  /* Color tokens reference a palette step (e.g. brand.500). Set to NULL
+   * when palette is deleted so the token surfaces as broken in the UI
+   * rather than silently disappearing. */
+  paletteId: text("palette_id").references(() => palette.id, {
+    onDelete: "set null",
+  }),
+  paletteStep: integer("palette_step"),
+  /** Free-form value for non-color tokens (e.g. "16px", "Inter, system-ui",
+   * "0 1px 2px rgb(0 0 0 / 0.05)"). */
+  rawValue: text("raw_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // ── OAuth Provider tables ───────────────────────────────────────────
 
 export const oauthApplication = pgTable("oauth_application", {
