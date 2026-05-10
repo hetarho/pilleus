@@ -66,7 +66,7 @@ export function OverviewView({ productId }: OverviewViewProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex max-w-3xl flex-col gap-8 p-8">
+    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-8">
       <FieldGroup label="Mission" hint="The single biggest goal — why this product exists.">
         <Textarea
           value={mission}

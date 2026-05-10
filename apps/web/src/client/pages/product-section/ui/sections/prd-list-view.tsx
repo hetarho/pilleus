@@ -35,7 +35,7 @@ export function PrdListView({ productId }: PrdListViewProps) {
   const prds = prdsQuery.data ?? [];
 
   return (
-    <main className="relative mx-auto max-w-5xl p-8">
+    <main className="relative mx-auto w-full max-w-5xl p-8">
       {prdsQuery.isPending ? (
         <p className="text-sm text-muted-foreground">Loading PRDs...</p>
       ) : prds.length === 0 ? (

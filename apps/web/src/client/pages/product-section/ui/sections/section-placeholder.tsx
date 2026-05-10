@@ -16,7 +16,7 @@ export function SectionPlaceholder({ productId, sectionId }: SectionPlaceholderP
   const Icon = section.icon;
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className="mx-auto w-full max-w-5xl p-8">
       <div className="mb-6 flex items-center gap-3">
         <Icon className="size-6 text-muted-foreground" />
         <div>

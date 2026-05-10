@@ -107,7 +107,7 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-8">
       <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <Link
           href={productSectionHref(productId, "prd")}
