@@ -2,9 +2,19 @@ import {
   PRD_AI_MARKER,
   PRD_BOILERPLATE,
   PRD_HUMAN_MARKER,
-} from "@/server/product/domain/prd-boilerplate";
+} from "./prd-boilerplate";
 
-const NBSP = "\u00a0";
+/* PRD section parsing — pure helpers that operate on the boilerplate format
+ * (`## N. 제목` headings with ✏️ human + 🤖 AI paragraphs).
+ *
+ * Lives in the domain layer because (1) it has zero framework deps and
+ * (2) both the server-side LLM task (buildPrompt / parseResponse) and the
+ * client form view need to read the same parser. The client re-exports
+ * these from `@/entities/prd` so FE code keeps its existing import path. */
+
+/* Use the   escape rather than a literal NBSP — see prd-boilerplate.ts
+ * for the rationale (accidental rewrites silently downgrade NBSP → space). */
+const NBSP = " ";
 const HEADING_RE = /^## (\d+)\./;
 
 export interface PrdSection {

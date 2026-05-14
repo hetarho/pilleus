@@ -84,21 +84,6 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
     });
   };
 
-  /* Publish: replace the form-composed body with the LLM-completed markdown
-   * the author pasted into the dialog, and flip status to published. From
-   * here the author edits markdown directly in MarkdownEditor. */
-  const handlePublish = (markdown: string) => {
-    setContent(markdown);
-    setStatus("published");
-    updateMutation.mutate({
-      id: prdId,
-      title: title.trim() || undefined,
-      benefitIndex: benefitChoice === "" ? null : Number(benefitChoice),
-      content: markdown,
-      status: "published",
-    });
-  };
-
   if (prdQuery.isPending) {
     return <p className="p-8 text-sm text-muted-foreground">Loading...</p>;
   }
@@ -193,25 +178,10 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
         </Button>
 
         {status === "draft" && (
-          <PublishDialog onPublish={handlePublish} isPending={updateMutation.isPending} />
+          <PublishDialog prdId={prdId} productId={productId} />
         )}
 
-        {product && (
-          <CopyPromptButton
-            content={content}
-            context={{
-              title,
-              product: {
-                name: product.name,
-                description: product.description,
-                mission: product.mission,
-                benefits: product.benefits,
-                principles: product.principles,
-                actors: product.actors,
-              },
-            }}
-          />
-        )}
+        <CopyPromptButton prdId={prdId} />
 
         {updateMutation.isSuccess && (
           <span className="text-sm text-muted-foreground">Saved.</span>

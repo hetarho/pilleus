@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../../shared/trpc/init";
+import { BuildPrdCompletionPromptUseCase } from "../../application/use-cases/build-prd-completion-prompt";
 import { CreatePrdUseCase } from "../../application/use-cases/create-prd";
 import { DeletePrdUseCase } from "../../application/use-cases/delete-prd";
 import { GetPrdUseCase } from "../../application/use-cases/get-prd";
 import { GetPrdVersionUseCase } from "../../application/use-cases/get-prd-version";
 import { ListPrdsUseCase } from "../../application/use-cases/list-prds";
 import { ListPrdVersionsUseCase } from "../../application/use-cases/list-prd-versions";
+import { SubmitPrdCompletionResponseUseCase } from "../../application/use-cases/submit-prd-completion-response";
 import { UpdatePrdUseCase } from "../../application/use-cases/update-prd";
 import { DrizzlePrdRepository } from "../../infrastructure/repositories/drizzle-prd-repository";
 import { DrizzlePrdVersionRepository } from "../../infrastructure/repositories/drizzle-prd-version-repository";
@@ -34,6 +36,36 @@ const deleteInput = z.object({ id: z.string().uuid() });
 
 const listVersionsInput = z.object({ prdId: z.string().uuid() });
 const getVersionInput = z.object({ id: z.string().uuid() });
+
+/* LLM-driven PRD completion. Today the FE drives the two halves
+ * separately (build the prompt → user pastes the LLM output → submit).
+ * When we add a server-side LLM provider, a single `run` mutation can be
+ * added here without changing either the task or the persistence path. */
+const buildCompletionPromptInput = z.object({ id: z.string().uuid() });
+const submitCompletionResponseInput = z.object({
+  id: z.string().uuid(),
+  rawResponse: z.string().min(1),
+});
+
+const completionRouter = createTRPCRouter({
+  buildPrompt: protectedProcedure
+    .input(buildCompletionPromptInput)
+    .query(({ ctx, input }) =>
+      new BuildPrdCompletionPromptUseCase(productRepo, prdRepo).execute({
+        prdId: input.id,
+        userId: ctx.user.id,
+      }),
+    ),
+  submit: protectedProcedure
+    .input(submitCompletionResponseInput)
+    .mutation(({ ctx, input }) =>
+      new SubmitPrdCompletionResponseUseCase(productRepo, prdRepo, versionRepo).execute({
+        prdId: input.id,
+        userId: ctx.user.id,
+        rawResponse: input.rawResponse,
+      }),
+    ),
+});
 
 const versionsRouter = createTRPCRouter({
   list: protectedProcedure.input(listVersionsInput).query(({ ctx, input }) =>
@@ -82,4 +114,5 @@ export const prdRouter = createTRPCRouter({
   }),
 
   versions: versionsRouter,
+  completion: completionRouter,
 });
