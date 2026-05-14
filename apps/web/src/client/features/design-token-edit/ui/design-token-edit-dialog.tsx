@@ -20,6 +20,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
 
 interface PaletteOption {
   id: string;
@@ -41,6 +42,7 @@ interface DesignTokenEditDialogProps {
     paletteId: string | null;
     paletteStep: number | null;
     rawValue: string | null;
+    description: string | null;
   };
 }
 
@@ -64,12 +66,14 @@ export function DesignTokenEditDialog({
   const [paletteId, setPaletteId] = useState("");
   const [paletteStep, setPaletteStep] = useState<number>(500);
   const [rawValue, setRawValue] = useState("");
+  const [description, setDescription] = useState("");
 
   /* Hydrate when the dialog opens — without this, jumping from edit-A to
    * edit-B keeps A's values. */
   useEffect(() => {
     if (!open) return;
     setName(token?.name ?? "");
+    setDescription(token?.description ?? "");
     if (isColor) {
       setPaletteId(token?.paletteId ?? palettes[0]?.id ?? "");
       setPaletteStep(token?.paletteStep ?? 500);
@@ -140,17 +144,23 @@ export function DesignTokenEditDialog({
             onSubmit={(e) => {
               e.preventDefault();
               if (!canSubmit) return;
+              /* description: pass null to clear when the field is empty,
+               * the trimmed value otherwise. Server treats undefined as
+               * "no change", but we always send it on submit so the
+               * user's clearing intent isn't silently dropped. */
+              const desc = description.trim();
+              const descPayload = desc.length > 0 ? desc : null;
               if (isEdit && token) {
                 updateMutation.mutate(
                   isColor
-                    ? { id: token.id, name, paletteId, paletteStep }
-                    : { id: token.id, name, rawValue },
+                    ? { id: token.id, name, paletteId, paletteStep, description: descPayload }
+                    : { id: token.id, name, rawValue, description: descPayload },
                 );
               } else {
                 createMutation.mutate(
                   isColor
-                    ? { productId, group, name, paletteId, paletteStep }
-                    : { productId, group, name, rawValue },
+                    ? { productId, group, name, paletteId, paletteStep, description: desc || undefined }
+                    : { productId, group, name, rawValue, description: desc || undefined },
                 );
               }
             }}
@@ -224,6 +234,17 @@ export function DesignTokenEditDialog({
                 />
               </div>
             )}
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="token-description">When to use (optional)</Label>
+              <Textarea
+                id="token-description"
+                placeholder="언제 이 토큰을 써야 하는지 짧게 적어주세요. AI 생성 시 자동 작성됩니다."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="min-h-16 text-sm"
+              />
+            </div>
 
             <DialogFooter>
               <Button type="submit" disabled={!canSubmit}>

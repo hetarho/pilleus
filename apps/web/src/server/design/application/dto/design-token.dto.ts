@@ -18,6 +18,9 @@ export interface DesignTokenDTO {
   hex: string | null;
   /** Non-color tokens. */
   rawValue: string | null;
+  /** When to use this token — short guidance. Surfaced under the token
+   * row in the UI; the AI token-generation task writes this. */
+  description: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +52,7 @@ export const toDesignTokenDTO = (
     paletteName,
     hex,
     rawValue: token.rawValue,
+    description: token.description,
     createdAt: token.createdAt,
     updatedAt: token.updatedAt,
   };

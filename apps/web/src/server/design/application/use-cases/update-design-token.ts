@@ -14,6 +14,9 @@ export interface UpdateDesignTokenInput {
   paletteStep?: number;
   /** Non-color tokens. */
   rawValue?: string;
+  /** Usage guidance. Pass `null` to explicitly clear; `undefined` leaves
+   * the existing description untouched. */
+  description?: string | null;
 }
 
 export class UpdateDesignTokenUseCase {
@@ -33,6 +36,7 @@ export class UpdateDesignTokenUseCase {
     }
 
     if (input.name !== undefined) token.rename(input.name);
+    if (input.description !== undefined) token.setDescription(input.description);
 
     if (token.group === "color") {
       if (input.paletteId !== undefined && input.paletteStep !== undefined) {

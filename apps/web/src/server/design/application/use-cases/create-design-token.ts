@@ -15,6 +15,7 @@ export interface CreateDesignTokenInput {
   paletteId?: string | null;
   paletteStep?: number | null;
   rawValue?: string | null;
+  description?: string | null;
 }
 
 export class CreateDesignTokenUseCase {
@@ -53,6 +54,7 @@ export class CreateDesignTokenUseCase {
       paletteId: input.paletteId ?? null,
       paletteStep: input.paletteStep ?? null,
       rawValue: input.rawValue ?? null,
+      description: input.description ?? null,
     });
     await this.tokens.save(token);
 

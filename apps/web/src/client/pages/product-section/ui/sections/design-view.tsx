@@ -12,6 +12,7 @@ import {
 import { CopyDesignMdButton } from "@/features/design-md-copy/ui/copy-design-md-button";
 import { DesignTokenEditDialog } from "@/features/design-token-edit/ui/design-token-edit-dialog";
 import { PaletteEditDialog } from "@/features/palette-edit/ui/palette-edit-dialog";
+import { TokenGenerationDialog } from "@/features/token-generation";
 import { Button } from "@/shared/ui/button";
 
 interface DesignViewProps {
@@ -66,22 +67,25 @@ export function DesignView({ productId }: DesignViewProps) {
             <p className="text-sm text-muted-foreground">{productQuery.data.name}</p>
           )}
         </div>
-        <CopyDesignMdButton
-          productName={productQuery.data?.name ?? ""}
-          palettes={palettes.map((p) => ({
-            name: p.name,
-            seedHex: p.seedHex,
-            shades: p.shades,
-          }))}
-          tokens={tokens.map((t) => ({
-            group: t.group,
-            name: t.name,
-            paletteName: t.paletteName,
-            paletteStep: t.paletteStep,
-            hex: t.hex,
-            rawValue: t.rawValue,
-          }))}
-        />
+        <div className="flex items-center gap-2">
+          <TokenGenerationDialog productId={productId} />
+          <CopyDesignMdButton
+            productName={productQuery.data?.name ?? ""}
+            palettes={palettes.map((p) => ({
+              name: p.name,
+              seedHex: p.seedHex,
+              shades: p.shades,
+            }))}
+            tokens={tokens.map((t) => ({
+              group: t.group,
+              name: t.name,
+              paletteName: t.paletteName,
+              paletteStep: t.paletteStep,
+              hex: t.hex,
+              rawValue: t.rawValue,
+            }))}
+          />
+        </div>
       </header>
 
       {/* ── Palettes ─────────────────────────────────────── */}
@@ -186,21 +190,24 @@ export function DesignView({ productId }: DesignViewProps) {
                 <h2 className="text-lg font-semibold">{TOKEN_GROUP_LABELS[group]}</h2>
                 <p className="text-xs text-muted-foreground">{TOKEN_GROUP_HINTS[group]}</p>
               </div>
-              <DesignTokenEditDialog
-                productId={productId}
-                group={group}
-                palettes={palettes.map((p) => ({
-                  id: p.id,
-                  name: p.name,
-                  shades: p.shades,
-                }))}
-                trigger={
-                  <Button size="sm" variant="outline">
-                    <Plus className="size-4" />
-                    Add
-                  </Button>
-                }
-              />
+              <div className="flex items-center gap-2">
+                <TokenGenerationDialog productId={productId} group={group} />
+                <DesignTokenEditDialog
+                  productId={productId}
+                  group={group}
+                  palettes={palettes.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    shades: p.shades,
+                  }))}
+                  trigger={
+                    <Button size="sm" variant="outline">
+                      <Plus className="size-4" />
+                      Add
+                    </Button>
+                  }
+                />
+              </div>
             </div>
             {tokensQuery.isPending ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
@@ -248,6 +255,7 @@ interface TokenRowProps {
     paletteName: string | null;
     hex: string | null;
     rawValue: string | null;
+    description: string | null;
   };
   palettes: { id: string; name: string; shades: { step: number; hex: string }[] }[];
   onDelete: () => void;
@@ -262,7 +270,7 @@ function TokenRow({ productId, group, token, palettes, onDelete }: TokenRowProps
     : token.rawValue ?? "";
 
   return (
-    <li className="flex items-center gap-3 px-4 py-2.5">
+    <li className="flex items-start gap-3 px-4 py-2.5">
       <DesignTokenEditDialog
         productId={productId}
         group={group}
@@ -271,27 +279,32 @@ function TokenRow({ productId, group, token, palettes, onDelete }: TokenRowProps
         trigger={
           <button
             type="button"
-            className="flex flex-1 items-center gap-3 text-left hover:underline"
+            className="flex flex-1 flex-col items-stretch gap-1 text-left hover:[&_.name]:underline"
           >
-            <span className="min-w-32 font-medium">{token.name}</span>
-            {isColor && token.hex && (
+            <div className="flex items-center gap-3">
+              <span className="name min-w-32 font-medium">{token.name}</span>
+              {isColor && token.hex && (
+                <span
+                  className="size-5 shrink-0 rounded border"
+                  style={{ backgroundColor: token.hex }}
+                  aria-hidden
+                />
+              )}
               <span
-                className="size-5 shrink-0 rounded border"
-                style={{ backgroundColor: token.hex }}
-                aria-hidden
-              />
+                className={
+                  "flex-1 truncate font-mono text-xs " +
+                  (isColor && !token.hex
+                    ? "text-destructive"
+                    : "text-muted-foreground")
+                }
+              >
+                {reference}
+                {isColor && token.hex ? ` · ${token.hex}` : ""}
+              </span>
+            </div>
+            {token.description && (
+              <p className="text-xs text-muted-foreground">{token.description}</p>
             )}
-            <span
-              className={
-                "flex-1 truncate font-mono text-xs " +
-                (isColor && !token.hex
-                  ? "text-destructive"
-                  : "text-muted-foreground")
-              }
-            >
-              {reference}
-              {isColor && token.hex ? ` · ${token.hex}` : ""}
-            </span>
           </button>
         }
       />

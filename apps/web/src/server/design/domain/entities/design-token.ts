@@ -14,9 +14,14 @@ interface DesignTokenProps {
   paletteId: string | null;
   paletteStep: number | null;
   rawValue: string | null;
+  /** Usage guidance — short prose explaining *when* to reach for this
+   * token. May be hand-written, AI-generated, or null. */
+  description: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const DESCRIPTION_MAX = 500;
 
 const sanitizeName = (s: string): string => {
   const trimmed = s.trim();
@@ -28,6 +33,16 @@ const sanitizeName = (s: string): string => {
 const sanitizeRawValue = (s: string): string => {
   const trimmed = s.trim();
   if (trimmed.length === 0) throw new Error("Token value must not be empty");
+  return trimmed;
+};
+
+const sanitizeDescription = (s: string | null | undefined): string | null => {
+  if (s == null) return null;
+  const trimmed = s.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.length > DESCRIPTION_MAX) {
+    throw new Error(`Token description is too long (max ${DESCRIPTION_MAX} chars)`);
+  }
   return trimmed;
 };
 
@@ -73,6 +88,7 @@ export class DesignToken extends AggregateRoot<string> {
     paletteId?: string | null;
     paletteStep?: number | null;
     rawValue?: string | null;
+    description?: string | null;
   }): DesignToken {
     if (!isTokenGroup(input.group)) {
       throw new Error(`Unknown token group: ${input.group}`);
@@ -95,6 +111,7 @@ export class DesignToken extends AggregateRoot<string> {
       paletteId: value.paletteId,
       paletteStep: value.paletteStep,
       rawValue: value.rawValue,
+      description: sanitizeDescription(input.description),
       createdAt: now,
       updatedAt: now,
     });
@@ -109,6 +126,7 @@ export class DesignToken extends AggregateRoot<string> {
     paletteId: string | null;
     paletteStep: number | null;
     rawValue: string | null;
+    description: string | null;
     createdAt: Date;
     updatedAt: Date;
   }): DesignToken {
@@ -138,6 +156,9 @@ export class DesignToken extends AggregateRoot<string> {
   }
   get rawValue(): string | null {
     return this.props.rawValue;
+  }
+  get description(): string | null {
+    return this.props.description;
   }
   get createdAt(): Date {
     return this.props.createdAt;
@@ -170,5 +191,13 @@ export class DesignToken extends AggregateRoot<string> {
     };
     validateValue(this.props.group, value);
     this.props = { ...this.props, ...value, updatedAt: new Date() };
+  }
+
+  setDescription(description: string | null): void {
+    this.props = {
+      ...this.props,
+      description: sanitizeDescription(description),
+      updatedAt: new Date(),
+    };
   }
 }

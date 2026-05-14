@@ -34,6 +34,7 @@ export class DrizzleDesignTokenRepository implements DesignTokenRepository {
         paletteId: token.paletteId,
         paletteStep: token.paletteStep,
         rawValue: token.rawValue,
+        description: token.description,
         createdAt: token.createdAt,
         updatedAt: token.updatedAt,
       })
@@ -45,6 +46,7 @@ export class DrizzleDesignTokenRepository implements DesignTokenRepository {
           paletteId: token.paletteId,
           paletteStep: token.paletteStep,
           rawValue: token.rawValue,
+          description: token.description,
           updatedAt: token.updatedAt,
         },
       });
