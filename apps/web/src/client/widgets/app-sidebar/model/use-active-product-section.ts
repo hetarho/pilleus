@@ -8,18 +8,14 @@ interface ActiveProductSection {
   sectionId: ProductSectionId | null;
 }
 
-const ROUTE_PATTERN = /^\/dashboard\/products\/([^/]+)\/([^/]+)/;
+const PRODUCT_ROUTE = /^\/dashboard\/products\/([^/]+)(?:\/([^/]+))?/;
 
-/**
- * Reads the currently-active product + section from the URL pathname.
- * Returns nulls when the user is not on a product-section route.
- */
 export function useActiveProductSection(): ActiveProductSection {
   const pathname = usePathname();
-  const match = pathname.match(ROUTE_PATTERN);
+  const match = pathname.match(PRODUCT_ROUTE);
   if (!match) return { productId: null, sectionId: null };
 
   const [, productId, rawSection] = match;
-  const sectionId = isProductSectionId(rawSection) ? rawSection : null;
+  const sectionId = rawSection && isProductSectionId(rawSection) ? rawSection : null;
   return { productId, sectionId };
 }

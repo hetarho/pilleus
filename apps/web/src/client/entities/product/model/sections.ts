@@ -1,22 +1,20 @@
 import {
   Boxes,
   FileText,
-  LayoutDashboard,
+  Frame,
   Palette,
   ShieldCheck,
-  Sparkles,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 export type ProductSectionId =
-  | "overview"
-  | "prd"
-  | "policy"
   | "design"
-  | "ux"
+  | "policy"
   | "element"
-  | "user-story";
+  | "user-story"
+  | "wireframe"
+  | "prd";
 
 export interface ProductSection {
   id: ProductSectionId;
@@ -25,13 +23,12 @@ export interface ProductSection {
 }
 
 export const PRODUCT_SECTIONS: readonly ProductSection[] = [
-  { id: "overview",   label: "Overview",   icon: LayoutDashboard },
-  { id: "prd",        label: "PRD",        icon: FileText },
-  { id: "policy",     label: "Policy",     icon: ShieldCheck },
-  { id: "design",     label: "Design",     icon: Palette },
-  { id: "ux",         label: "UX",         icon: Sparkles },
-  { id: "element",    label: "Element",    icon: Boxes },
-  { id: "user-story", label: "User Story", icon: Users },
+  { id: "design",     label: "Design System", icon: Palette },
+  { id: "policy",     label: "Policy",        icon: ShieldCheck },
+  { id: "element",    label: "Element",       icon: Boxes },
+  { id: "user-story", label: "User Story",    icon: Users },
+  { id: "wireframe",  label: "Wireframe",     icon: Frame },
+  { id: "prd",        label: "PRD",           icon: FileText },
 ] as const;
 
 const VALID_IDS = new Set<ProductSectionId>(PRODUCT_SECTIONS.map((s) => s.id));
@@ -46,7 +43,9 @@ export function getProductSection(id: ProductSectionId): ProductSection {
   return section;
 }
 
-export const DEFAULT_PRODUCT_SECTION: ProductSectionId = "overview";
+export function productHref(productId: string): string {
+  return `/dashboard/products/${productId}`;
+}
 
 export function productSectionHref(productId: string, sectionId: ProductSectionId): string {
   return `/dashboard/products/${productId}/${sectionId}`;

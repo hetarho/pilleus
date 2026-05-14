@@ -3,7 +3,6 @@
 import { notFound } from "next/navigation";
 import { isProductSectionId, type ProductSectionId } from "@/entities/product";
 import { DesignView } from "./sections/design-view";
-import { OverviewView } from "./sections/overview-view";
 import { PrdListView } from "./sections/prd-list-view";
 import { SectionPlaceholder } from "./sections/section-placeholder";
 
@@ -17,14 +16,11 @@ export function ProductSectionView({ productId, sectionId }: ProductSectionViewP
   const id = sectionId as ProductSectionId;
 
   switch (id) {
-    case "overview":
-      return <OverviewView productId={productId} />;
     case "prd":
       return <PrdListView productId={productId} />;
     case "design":
       return <DesignView productId={productId} />;
     default:
-      // policy / ux / element / user-story — not yet implemented
       return <SectionPlaceholder productId={productId} sectionId={id} />;
   }
 }

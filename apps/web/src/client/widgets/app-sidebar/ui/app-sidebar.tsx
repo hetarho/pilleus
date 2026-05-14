@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronRight, Folder, FolderOpen, Plus } from "lucide-react";
+import { Folder, FolderOpen, Plus } from "lucide-react";
 import Link from "next/link";
 import {
   PRODUCT_SECTIONS,
+  productHref,
   productSectionHref,
   useProductListQuery,
 } from "@/entities/product";
@@ -11,11 +12,6 @@ import { useSession } from "@/entities/session";
 import { CreateProductDialog } from "@/features/product-create";
 import { cn } from "@/shared/lib/cn";
 import { useIsClient } from "@/shared/lib/hooks/use-is-client";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/shared/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -59,50 +55,44 @@ export function AppSidebar() {
     );
   } else {
     menuContent = productsQuery.data.map((product) => {
-      const isActive = activeProductId === product.id;
-      const FolderIcon = isActive ? FolderOpen : Folder;
+      const isActiveProduct = activeProductId === product.id;
+      const isOnProjectRoot = isActiveProduct && activeSectionId === null;
+      const FolderIcon = isActiveProduct ? FolderOpen : Folder;
       return (
-        <Collapsible
-          key={product.id}
-          asChild
-          defaultOpen={isActive}
-          className="group/collapsible"
-        >
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton
-                tooltip={product.name}
-                className={cn(
-                  isActive &&
-                    "bg-sidebar-primary font-semibold text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground active:bg-sidebar-primary active:text-sidebar-primary-foreground data-[state=open]:hover:bg-sidebar-primary data-[state=open]:hover:text-sidebar-primary-foreground",
-                )}
-              >
-                <FolderIcon className="size-4" />
-                <span>{product.name}</span>
-                <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {PRODUCT_SECTIONS.map((section) => {
-                  const SectionIcon = section.icon;
-                  const sectionActive =
-                    isActive && activeSectionId === section.id;
-                  return (
-                    <SidebarMenuSubItem key={section.id}>
-                      <SidebarMenuSubButton asChild isActive={sectionActive}>
-                        <Link href={productSectionHref(product.id, section.id)}>
-                          <SectionIcon className="size-4" />
-                          <span>{section.label}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  );
-                })}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
+        <SidebarMenuItem key={product.id}>
+          <SidebarMenuButton
+            asChild
+            tooltip={product.name}
+            isActive={isOnProjectRoot}
+            className={cn(
+              isActiveProduct &&
+                "bg-sidebar-primary font-semibold text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground active:bg-sidebar-primary active:text-sidebar-primary-foreground",
+            )}
+          >
+            <Link href={productHref(product.id)}>
+              <FolderIcon className="size-4" />
+              <span>{product.name}</span>
+            </Link>
+          </SidebarMenuButton>
+          {isActiveProduct && (
+            <SidebarMenuSub>
+              {PRODUCT_SECTIONS.map((section) => {
+                const SectionIcon = section.icon;
+                const sectionActive = activeSectionId === section.id;
+                return (
+                  <SidebarMenuSubItem key={section.id}>
+                    <SidebarMenuSubButton asChild isActive={sectionActive}>
+                      <Link href={productSectionHref(product.id, section.id)}>
+                        <SectionIcon className="size-4" />
+                        <span>{section.label}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                );
+              })}
+            </SidebarMenuSub>
+          )}
+        </SidebarMenuItem>
       );
     });
   }

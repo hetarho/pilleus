@@ -19,6 +19,7 @@ const idInput = z.object({ id: z.string().uuid() });
 
 const updateOverviewInput = z.object({
   id: z.string().uuid(),
+  description: z.string().nullable().optional(),
   mission: z.string().nullable(),
   benefits: z.array(z.string()),
   principles: z.array(z.string()),

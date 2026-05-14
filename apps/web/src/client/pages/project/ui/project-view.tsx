@@ -9,27 +9,26 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 
-interface OverviewViewProps {
+interface ProjectViewProps {
   productId: string;
 }
 
-export function OverviewView({ productId }: OverviewViewProps) {
+export function ProjectView({ productId }: ProjectViewProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const productQuery = useQuery(trpc.product.get.queryOptions({ id: productId }));
 
+  const [description, setDescription] = useState("");
   const [mission, setMission] = useState("");
   const [benefits, setBenefits] = useState<string[]>([""]);
   const [principles, setPrinciples] = useState<string[]>([""]);
   const [actors, setActors] = useState<string[]>([""]);
 
-  /* Hydrate local state from server data when it arrives. The form is
-   * uncontrolled-ish: server is the source of truth on initial load and
-   * after each save; user edits drive local state until the next save. */
   useEffect(() => {
     const p = productQuery.data;
     if (!p) return;
+    setDescription(p.description ?? "");
     setMission(p.mission ?? "");
     setBenefits(p.benefits.length > 0 ? [...p.benefits] : [""]);
     setPrinciples(p.principles.length > 0 ? [...p.principles] : [""]);
@@ -51,6 +50,7 @@ export function OverviewView({ productId }: OverviewViewProps) {
     e.preventDefault();
     updateMutation.mutate({
       id: productId,
+      description: description.trim() || null,
       mission: mission.trim() || null,
       benefits: benefits.map((b) => b.trim()).filter(Boolean),
       principles: principles.map((p) => p.trim()).filter(Boolean),
@@ -66,51 +66,72 @@ export function OverviewView({ productId }: OverviewViewProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-8">
-      <FieldGroup label="Mission" hint="The single biggest goal — why this product exists.">
-        <Textarea
-          value={mission}
-          onChange={(e) => setMission(e.target.value)}
-          placeholder="Help PMs and engineers ship the right thing the first time"
-          rows={2}
-        />
-      </FieldGroup>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-8">
+      <header>
+        <h1 className="text-2xl font-bold">{productQuery.data.name}</h1>
+        <p className="text-sm text-muted-foreground">
+          프로젝트 개요 — 사이드바의 각 섹션이 이 정보를 참고해 PRD·디자인 토큰 등을 만듭니다.
+        </p>
+      </header>
 
-      <FieldGroup
-        label="Benefits"
-        hint="Distinct value propositions the product delivers."
-      >
-        <ListEditor items={benefits} onChange={setBenefits} placeholder="A benefit" />
-      </FieldGroup>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        <FieldGroup
+          label="Description"
+          hint="What this product is in one or two sentences."
+        >
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="An AI-assisted product spec workspace for PMs and engineers."
+            rows={2}
+          />
+        </FieldGroup>
 
-      <FieldGroup
-        label="Principles"
-        hint="Non-negotiable rules to follow while building this product."
-      >
-        <ListEditor items={principles} onChange={setPrinciples} placeholder="A principle" />
-      </FieldGroup>
+        <FieldGroup label="Mission" hint="The single biggest goal — why this product exists.">
+          <Textarea
+            value={mission}
+            onChange={(e) => setMission(e.target.value)}
+            placeholder="Help PMs and engineers ship the right thing the first time"
+            rows={2}
+          />
+        </FieldGroup>
 
-      <FieldGroup
-        label="Actors"
-        hint="Who or what interacts with this product (end user, admin, scheduler, ...). PRDs reference this list."
-      >
-        <ListEditor items={actors} onChange={setActors} placeholder="An actor" />
-      </FieldGroup>
+        <FieldGroup
+          label="Benefits"
+          hint="Distinct value propositions the product delivers."
+        >
+          <ListEditor items={benefits} onChange={setBenefits} placeholder="A benefit" />
+        </FieldGroup>
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? "Saving..." : "Save"}
-        </Button>
-        {updateMutation.isSuccess && (
-          <span className="text-sm text-muted-foreground">Saved.</span>
-        )}
-        {updateMutation.error && (
-          <span className="text-sm text-destructive">
-            {updateMutation.error.message}
-          </span>
-        )}
-      </div>
-    </form>
+        <FieldGroup
+          label="Principles"
+          hint="Non-negotiable rules to follow while building this product."
+        >
+          <ListEditor items={principles} onChange={setPrinciples} placeholder="A principle" />
+        </FieldGroup>
+
+        <FieldGroup
+          label="Actors"
+          hint="Who or what interacts with this product (end user, admin, scheduler, ...). PRDs reference this list."
+        >
+          <ListEditor items={actors} onChange={setActors} placeholder="An actor" />
+        </FieldGroup>
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? "Saving..." : "Save"}
+          </Button>
+          {updateMutation.isSuccess && (
+            <span className="text-sm text-muted-foreground">Saved.</span>
+          )}
+          {updateMutation.error && (
+            <span className="text-sm text-destructive">
+              {updateMutation.error.message}
+            </span>
+          )}
+        </div>
+      </form>
+    </main>
   );
 }
 

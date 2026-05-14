@@ -3,9 +3,9 @@ export { useProductListQuery } from "./api/queries";
 export { ProductCard } from "./ui/product-card";
 export {
   PRODUCT_SECTIONS,
-  DEFAULT_PRODUCT_SECTION,
   isProductSectionId,
   getProductSection,
+  productHref,
   productSectionHref,
   type ProductSection,
   type ProductSectionId,

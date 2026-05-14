@@ -5,6 +5,7 @@ import { type ProductDTO, toProductDTO } from "../dto/product.dto";
 export interface UpdateProductOverviewInput {
   id: string;
   userId: string;
+  description?: string | null;
   mission: string | null;
   benefits: string[];
   principles: string[];
@@ -21,6 +22,9 @@ export class UpdateProductOverviewUseCase {
     }
     if (!product.isOwnedBy(input.userId)) {
       throw new ForbiddenError("You don't have permission to update this product");
+    }
+    if (input.description !== undefined) {
+      product.describe(input.description);
     }
     product.updateOverview({
       mission: input.mission,
