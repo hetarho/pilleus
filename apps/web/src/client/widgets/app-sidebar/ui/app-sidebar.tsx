@@ -1,9 +1,9 @@
 "use client";
 
-import { Folder, FolderOpen, Plus } from "lucide-react";
+import { ChevronRight, Folder, FolderOpen, Plus } from "lucide-react";
 import Link from "next/link";
 import {
-  PRODUCT_SECTIONS,
+  PRODUCT_NAV_GROUPS,
   productHref,
   productSectionHref,
   useProductListQuery,
@@ -12,6 +12,11 @@ import { useSession } from "@/entities/session";
 import { CreateProductDialog } from "@/features/product-create";
 import { cn } from "@/shared/lib/cn";
 import { useIsClient } from "@/shared/lib/hooks/use-is-client";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -59,40 +64,61 @@ export function AppSidebar() {
       const isOnProjectRoot = isActiveProduct && activeSectionId === null;
       const FolderIcon = isActiveProduct ? FolderOpen : Folder;
       return (
-        <SidebarMenuItem key={product.id}>
-          <SidebarMenuButton
-            asChild
-            tooltip={product.name}
-            isActive={isOnProjectRoot}
-            className={cn(
-              isActiveProduct &&
-                "bg-sidebar-primary font-semibold text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground active:bg-sidebar-primary active:text-sidebar-primary-foreground",
-            )}
-          >
-            <Link href={productHref(product.id)}>
-              <FolderIcon className="size-4" />
-              <span>{product.name}</span>
-            </Link>
-          </SidebarMenuButton>
-          {isActiveProduct && (
-            <SidebarMenuSub>
-              {PRODUCT_SECTIONS.map((section) => {
-                const SectionIcon = section.icon;
-                const sectionActive = activeSectionId === section.id;
-                return (
-                  <SidebarMenuSubItem key={section.id}>
-                    <SidebarMenuSubButton asChild isActive={sectionActive}>
-                      <Link href={productSectionHref(product.id, section.id)}>
-                        <SectionIcon className="size-4" />
-                        <span>{section.label}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                );
-              })}
-            </SidebarMenuSub>
-          )}
-        </SidebarMenuItem>
+        <Collapsible
+          key={product.id}
+          defaultOpen={isActiveProduct}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            {/* The project name only toggles its section list open/closed —
+              * navigation happens through the Overview item below. */}
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip={product.name}
+                className={cn(
+                  isActiveProduct &&
+                    "bg-sidebar-primary font-semibold text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground active:bg-sidebar-primary active:text-sidebar-primary-foreground",
+                )}
+              >
+                <FolderIcon className="size-4" />
+                <span>{product.name}</span>
+                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {PRODUCT_NAV_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <div className="px-2 pt-3 pb-1 text-[0.625rem] font-medium uppercase tracking-wider text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+                    {group.label}
+                  </div>
+                  <SidebarMenuSub>
+                    {group.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      const href =
+                        item.section === null
+                          ? productHref(product.id)
+                          : productSectionHref(product.id, item.section);
+                      const itemActive =
+                        item.section === null
+                          ? isOnProjectRoot
+                          : isActiveProduct && activeSectionId === item.section;
+                      return (
+                        <SidebarMenuSubItem key={item.label}>
+                          <SidebarMenuSubButton asChild isActive={itemActive}>
+                            <Link href={href}>
+                              <ItemIcon className="size-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                </div>
+              ))}
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
       );
     });
   }
