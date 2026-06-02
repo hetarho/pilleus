@@ -4,4 +4,4 @@ export {
   normalizeHex,
   type Shade,
   type ShadeStep,
-} from "./lib/oklch-scale";
+} from "@/kernel/palette";

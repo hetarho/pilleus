@@ -1,8 +1,8 @@
 import { ValidationError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt, LlmTask } from "../../../shared/llm";
 import type { Product } from "../../../product/domain/entities/product";
-import { TOKEN_GROUPS, type TokenGroup } from "../../../../client/entities/design-token";
-import { SHADE_STEPS } from "../../../../client/entities/palette";
+import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
+import { SHADE_STEPS } from "@/kernel/palette";
 import type {
   GeneratedToken,
   PaletteOption,

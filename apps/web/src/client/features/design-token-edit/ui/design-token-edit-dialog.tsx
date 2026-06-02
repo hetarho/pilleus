@@ -69,7 +69,10 @@ export function DesignTokenEditDialog({
   const [description, setDescription] = useState("");
 
   /* Hydrate when the dialog opens — without this, jumping from edit-A to
-   * edit-B keeps A's values. */
+   * edit-B keeps A's values. `palettes` is intentionally NOT a dependency:
+   * the parent passes a freshly-mapped array on every render, so including
+   * it would re-run this effect mid-edit and wipe the in-progress form. We
+   * only need the current palettes at open time, which `open` already gates. */
   useEffect(() => {
     if (!open) return;
     setName(token?.name ?? "");
@@ -80,7 +83,7 @@ export function DesignTokenEditDialog({
     } else {
       setRawValue(token?.rawValue ?? "");
     }
-  }, [open, token, palettes, isColor]);
+  }, [open, token, isColor]);
 
   const invalidate = () =>
     queryClient.invalidateQueries({

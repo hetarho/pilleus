@@ -1,7 +1,7 @@
 import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt } from "../../../shared/llm";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
-import { TOKEN_GROUPS, type TokenGroup } from "../../../../client/entities/design-token";
+import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
 import type { PaletteRepository } from "../../domain/repositories/palette-repository";
 import { allTokensGenerationTask } from "../llm-tasks/all-tokens-generation-task";

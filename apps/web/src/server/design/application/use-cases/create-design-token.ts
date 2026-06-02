@@ -1,6 +1,6 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
-import type { TokenGroup } from "../../../../client/entities/design-token";
+import type { TokenGroup } from "@/kernel/design-token";
 import type { Palette } from "../../domain/entities/palette";
 import { DesignToken } from "../../domain/entities/design-token";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
@@ -35,7 +35,7 @@ export class CreateDesignTokenUseCase {
     /* For color tokens, verify the referenced palette exists and belongs to
      * the same product — otherwise we'd allow cross-product palette refs. */
     if (input.group === "color") {
-      if (!input.paletteId) throw new Error("Color token requires paletteId");
+      if (!input.paletteId) throw new ValidationError("Color token requires paletteId");
       const palette = await this.palettes.findById(input.paletteId);
       if (!palette || palette.productId !== input.productId) {
         throw new NotFoundError(`Palette ${input.paletteId} not found in this product`);

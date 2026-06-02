@@ -44,10 +44,14 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
   /* Published mode shows a read-only render by default; user clicks 수정
    * to switch into the editable MarkdownEditor and 완료 to return. */
   const [isEditing, setIsEditing] = useState(false);
+  /* Bumped on version restore so PrdFormView remounts and re-derives its
+   * answers from the restored content (it only parses `content` on mount). */
+  const [formResetKey, setFormResetKey] = useState(0);
 
   /* Server is the source of truth; mirror to local state on first load and
-   * after every save. We don't sync on every server tick to avoid clobbering
-   * unsaved edits — TanStack Query's invalidate is invoked by saves only. */
+   * after every save/publish (invalidate is invoked by those only). This
+   * deliberately does NOT touch isEditing — that's local UI state, and
+   * resetting it on a save refetch would kick the user out of edit mode. */
   useEffect(() => {
     const p = prdQuery.data;
     if (!p) return;
@@ -55,8 +59,12 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
     setContent(p.content);
     setBenefitChoice(p.benefitIndex == null ? "" : String(p.benefitIndex));
     setStatus(p.status);
-    setIsEditing(false);
   }, [prdQuery.data]);
+
+  /* Return to read mode only when navigating to a different PRD. */
+  useEffect(() => {
+    setIsEditing(false);
+  }, [prdId]);
 
   const updateMutation = useMutation(
     trpc.product.prd.update.mutationOptions({
@@ -106,7 +114,10 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
           <HistoryPanel
             prdId={prdId}
             currentContent={content}
-            onRestore={(restored) => setContent(restored)}
+            onRestore={(restored) => {
+              setContent(restored);
+              setFormResetKey((k) => k + 1);
+            }}
           />
           <StatusBadge status={status} />
         </div>
@@ -142,7 +153,7 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
 
       {/* View driven entirely by status. Author can't toggle. */}
       {content && status === "draft" && (
-        <PrdFormView content={content} onChange={setContent} />
+        <PrdFormView key={formResetKey} content={content} onChange={setContent} />
       )}
       {content && status === "published" && (
         <div className="flex flex-col gap-2">

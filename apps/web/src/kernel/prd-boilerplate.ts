@@ -26,9 +26,9 @@
  *   regular space, which then collapses on save and breaks the layout.
  *   The escape form is invariant under re-typing.
  *
- * Don't import this on the client for *runtime* logic — it's allowed for
- * the prompt-copy feature because the constant must match exactly between
- * "what the editor shows" and "what gets sent to the LLM".
+ * Lives in the shared kernel because both the server LLM task and the
+ * client prompt-copy / form views must read the EXACT same constant —
+ * "what the editor shows" has to match "what gets sent to the LLM".
  */
 
 export const PRD_HUMAN_MARKER = "✏️";

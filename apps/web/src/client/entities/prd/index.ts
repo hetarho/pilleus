@@ -1,9 +1,9 @@
-/* Pure parsing helpers live on the server domain side so the server LLM
- * task can import them too. Re-exporting here keeps the FE import surface
- * (`@/entities/prd`) unchanged. */
+/* Pure parsing helpers live in the shared kernel so both the server LLM
+ * task and this FE entity can import them without crossing the FE↔BE
+ * boundary. Re-exporting here keeps the `@/entities/prd` import surface. */
 export {
   PRD_SECTIONS,
   composeContent,
   extractAnswers,
   type PrdSection,
-} from "@/server/product/domain/prd-sections";
+} from "@/kernel/prd-sections";

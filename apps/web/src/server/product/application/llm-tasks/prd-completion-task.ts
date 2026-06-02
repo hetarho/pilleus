@@ -2,8 +2,8 @@ import { ValidationError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt, LlmTask } from "../../../shared/llm";
 import type { Prd } from "../../domain/entities/prd";
 import type { Product } from "../../domain/entities/product";
-import { PRD_SECTION_COUNT } from "../../domain/prd-boilerplate";
-import { PRD_SECTIONS, type PrdSection, extractAnswers } from "../../domain/prd-sections";
+import { PRD_SECTION_COUNT } from "@/kernel/prd-boilerplate";
+import { PRD_SECTIONS, type PrdSection, extractAnswers } from "@/kernel/prd-sections";
 
 /* PRD-completion task.
  *

@@ -1,9 +1,10 @@
 import { AggregateRoot } from "../../../shared/domain/aggregate-root";
+import { ValidationError } from "../../../shared/errors/domain-error";
 import {
   isTokenGroup,
   type TokenGroup,
-} from "../../../../client/entities/design-token";
-import { SHADE_STEPS } from "../../../../client/entities/palette";
+} from "@/kernel/design-token";
+import { SHADE_STEPS } from "@/kernel/palette";
 
 interface DesignTokenProps {
   id: string;
@@ -25,14 +26,14 @@ const DESCRIPTION_MAX = 500;
 
 const sanitizeName = (s: string): string => {
   const trimmed = s.trim();
-  if (trimmed.length === 0) throw new Error("Token name must not be empty");
-  if (trimmed.length > 80) throw new Error("Token name is too long");
+  if (trimmed.length === 0) throw new ValidationError("Token name must not be empty");
+  if (trimmed.length > 80) throw new ValidationError("Token name is too long");
   return trimmed;
 };
 
 const sanitizeRawValue = (s: string): string => {
   const trimmed = s.trim();
-  if (trimmed.length === 0) throw new Error("Token value must not be empty");
+  if (trimmed.length === 0) throw new ValidationError("Token value must not be empty");
   return trimmed;
 };
 
@@ -41,7 +42,7 @@ const sanitizeDescription = (s: string | null | undefined): string | null => {
   const trimmed = s.trim();
   if (trimmed.length === 0) return null;
   if (trimmed.length > DESCRIPTION_MAX) {
-    throw new Error(`Token description is too long (max ${DESCRIPTION_MAX} chars)`);
+    throw new ValidationError(`Token description is too long (max ${DESCRIPTION_MAX} chars)`);
   }
   return trimmed;
 };
@@ -57,20 +58,20 @@ function validateValue(group: TokenGroup, value: {
   rawValue: string | null;
 }): void {
   if (group === "color") {
-    if (!value.paletteId) throw new Error("Color token requires paletteId");
+    if (!value.paletteId) throw new ValidationError("Color token requires paletteId");
     if (value.paletteStep === null) {
-      throw new Error("Color token requires paletteStep");
+      throw new ValidationError("Color token requires paletteStep");
     }
     if (!ALLOWED_STEPS.has(value.paletteStep)) {
-      throw new Error(`Invalid palette step: ${value.paletteStep}`);
+      throw new ValidationError(`Invalid palette step: ${value.paletteStep}`);
     }
     if (value.rawValue !== null) {
-      throw new Error("Color token must not have rawValue");
+      throw new ValidationError("Color token must not have rawValue");
     }
   } else {
-    if (!value.rawValue) throw new Error(`${group} token requires rawValue`);
+    if (!value.rawValue) throw new ValidationError(`${group} token requires rawValue`);
     if (value.paletteId !== null || value.paletteStep !== null) {
-      throw new Error(`${group} token must not reference a palette`);
+      throw new ValidationError(`${group} token must not reference a palette`);
     }
   }
 }
@@ -91,7 +92,7 @@ export class DesignToken extends AggregateRoot<string> {
     description?: string | null;
   }): DesignToken {
     if (!isTokenGroup(input.group)) {
-      throw new Error(`Unknown token group: ${input.group}`);
+      throw new ValidationError(`Unknown token group: ${input.group}`);
     }
     const value = {
       paletteId: input.paletteId ?? null,
@@ -173,7 +174,7 @@ export class DesignToken extends AggregateRoot<string> {
 
   setColorRef(paletteId: string, paletteStep: number): void {
     if (this.props.group !== "color") {
-      throw new Error("Only color tokens can reference a palette");
+      throw new ValidationError("Only color tokens can reference a palette");
     }
     const value = { paletteId, paletteStep, rawValue: null };
     validateValue("color", value);
@@ -182,7 +183,7 @@ export class DesignToken extends AggregateRoot<string> {
 
   setRawValue(rawValue: string): void {
     if (this.props.group === "color") {
-      throw new Error("Color tokens cannot use rawValue — set a palette ref instead");
+      throw new ValidationError("Color tokens cannot use rawValue — set a palette ref instead");
     }
     const value = {
       paletteId: null,

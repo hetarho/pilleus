@@ -1,9 +1,10 @@
 import { AggregateRoot } from "../../../shared/domain/aggregate-root";
+import { ValidationError } from "../../../shared/errors/domain-error";
 import {
   generateShades,
   normalizeHex,
   type Shade,
-} from "../../../../client/entities/palette/lib/oklch-scale";
+} from "@/kernel/palette";
 
 interface PaletteProps {
   id: string;
@@ -17,8 +18,8 @@ interface PaletteProps {
 
 const sanitizeName = (s: string): string => {
   const trimmed = s.trim();
-  if (trimmed.length === 0) throw new Error("Palette name must not be empty");
-  if (trimmed.length > 50) throw new Error("Palette name is too long");
+  if (trimmed.length === 0) throw new ValidationError("Palette name must not be empty");
+  if (trimmed.length > 50) throw new ValidationError("Palette name is too long");
   return trimmed;
 };
 

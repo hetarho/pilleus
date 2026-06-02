@@ -9,9 +9,9 @@ import {
   TOKEN_GROUP_LABELS,
   type TokenGroup,
 } from "@/entities/design-token";
-import { CopyDesignMdButton } from "@/features/design-md-copy/ui/copy-design-md-button";
-import { DesignTokenEditDialog } from "@/features/design-token-edit/ui/design-token-edit-dialog";
-import { PaletteEditDialog } from "@/features/palette-edit/ui/palette-edit-dialog";
+import { CopyDesignMdButton } from "@/features/design-md-copy";
+import { DesignTokenEditDialog } from "@/features/design-token-edit";
+import { PaletteEditDialog } from "@/features/palette-edit";
 import { TokenGenerationDialog } from "@/features/token-generation";
 import { Button } from "@/shared/ui/button";
 

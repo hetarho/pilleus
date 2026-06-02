@@ -1,6 +1,6 @@
 import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
-import type { TokenGroup } from "../../../../client/entities/design-token";
+import type { TokenGroup } from "@/kernel/design-token";
 import { DesignToken } from "../../domain/entities/design-token";
 import type { Palette } from "../../domain/entities/palette";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";

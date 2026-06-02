@@ -1,4 +1,4 @@
-import type { TokenGroup } from "../../../../client/entities/design-token";
+import type { TokenGroup } from "@/kernel/design-token";
 import type { Palette } from "../../domain/entities/palette";
 import type { DesignToken } from "../../domain/entities/design-token";
 

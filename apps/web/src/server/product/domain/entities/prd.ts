@@ -123,10 +123,6 @@ export class Prd extends AggregateRoot<string> {
   setAiReviewedContent(content: string | null): void {
     this.props = { ...this.props, aiReviewedContent: content, updatedAt: new Date() };
   }
-
-  belongsTo(productId: string): boolean {
-    return this.props.productId === productId;
-  }
 }
 
 function normalizeStatus(s: string): PrdStatus {

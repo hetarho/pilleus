@@ -4,4 +4,4 @@ export {
   TOKEN_GROUP_HINTS,
   isTokenGroup,
   type TokenGroup,
-} from "./lib/groups";
+} from "@/kernel/design-token";

@@ -1,5 +1,5 @@
 import type { Palette } from "../../domain/entities/palette";
-import type { Shade } from "../../../../client/entities/palette/lib/oklch-scale";
+import type { Shade } from "@/kernel/palette";
 
 export interface PaletteDTO {
   id: string;

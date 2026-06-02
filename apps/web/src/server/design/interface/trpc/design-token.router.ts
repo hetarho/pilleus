@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../../shared/trpc/init";
 import { DrizzleProductRepository } from "../../../product/infrastructure/repositories/drizzle-product-repository";
-import { TOKEN_GROUPS } from "../../../../client/entities/design-token";
-import { SHADE_STEPS } from "../../../../client/entities/palette";
+import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
+import { SHADE_STEPS } from "@/kernel/palette";
 import { BuildAllTokensGenerationPromptUseCase } from "../../application/use-cases/build-all-tokens-generation-prompt";
 import { BuildTokenGenerationPromptUseCase } from "../../application/use-cases/build-token-generation-prompt";
 import { CreateDesignTokenUseCase } from "../../application/use-cases/create-design-token";
@@ -18,7 +18,9 @@ const tokens = new DrizzleDesignTokenRepository();
 const palettes = new DrizzlePaletteRepository();
 const products = new DrizzleProductRepository();
 
-const groupSchema = z.enum([...TOKEN_GROUPS] as [string, ...string[]]);
+const groupSchema = z.enum(
+  TOKEN_GROUPS as unknown as [TokenGroup, ...TokenGroup[]],
+);
 const stepSchema = z
   .number()
   .refine((n) => (SHADE_STEPS as readonly number[]).includes(n), "Invalid palette step");
@@ -82,7 +84,7 @@ const generationRouter = createTRPCRouter({
       new BuildTokenGenerationPromptUseCase(products, palettes, tokens).execute({
         productId: input.productId,
         userId: ctx.user.id,
-        group: input.group as (typeof TOKEN_GROUPS)[number],
+        group: input.group,
         density: input.density,
       }),
     ),
@@ -92,7 +94,7 @@ const generationRouter = createTRPCRouter({
       new SubmitTokenGenerationResponseUseCase(products, palettes, tokens).execute({
         productId: input.productId,
         userId: ctx.user.id,
-        group: input.group as (typeof TOKEN_GROUPS)[number],
+        group: input.group,
         density: input.density,
         rawResponse: input.rawResponse,
       }),
@@ -143,7 +145,7 @@ export const designTokenRouter = createTRPCRouter({
   create: protectedProcedure.input(createInput).mutation(({ ctx, input }) =>
     new CreateDesignTokenUseCase(tokens, palettes, products).execute({
       ...input,
-      group: input.group as (typeof TOKEN_GROUPS)[number],
+      group: input.group,
       userId: ctx.user.id,
     }),
   ),

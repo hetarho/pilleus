@@ -1,6 +1,6 @@
 import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
 import { Prd } from "../../domain/entities/prd";
-import { PRD_BOILERPLATE } from "../../domain/prd-boilerplate";
+import { PRD_BOILERPLATE } from "@/kernel/prd-boilerplate";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { PrdVersionRepository } from "../../domain/repositories/prd-version-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
