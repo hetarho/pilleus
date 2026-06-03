@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -63,28 +62,20 @@ export const verification = pgTable("verification", {
 
 // ── App tables ──────────────────────────────────────────────────────
 
+/** A product is the root of the "Intent" ring. Its identity (why/who/what) is
+ * held by:
+ *   mission   — the single biggest goal (scalar, on this row)
+ *   benefit   — value propositions, promoted to their own rows (see `benefit`)
+ *   persona   — who we build for, promoted to their own rows (see `persona`)
+ * Benefits/personas were once text[] columns here; they became first-class rows
+ * so downstream artifacts (PRD, references) can point at a STABLE id instead of
+ * a fragile array position. */
 export const product = pgTable("product", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description"),
   /** The single biggest goal — why the product exists. */
   mission: text("mission"),
-  /** Distinct value propositions the product delivers (ordered list). */
-  benefits: text("benefits")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  /** Non-negotiable rules to follow while building the product. */
-  principles: text("principles")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  /** Actors that interact with this product (end user, admin, scheduler, ...).
-   * Defined product-wide so PRDs can reference a stable list. */
-  actors: text("actors")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -92,9 +83,38 @@ export const product = pgTable("product", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [index("product_user_id_idx").on(t.userId)]);
 
+/** Benefit — a distinct value proposition the product delivers. Lives in the
+ * Intent ring. `position` is a per-product 0-based display order. */
+export const benefit = pgTable("benefit", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [index("benefit_product_id_idx").on(t.productId)]);
+
+/** Persona — who the product is built for (replaces the old "actors" list).
+ * Lives in the Intent ring. `description` is optional so a persona can grow
+ * from a bare label into a richer archetype later. */
+export const persona = pgTable("persona", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  description: text("description"),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [index("persona_product_id_idx").on(t.productId)]);
+
 /** Product Requirements Document — markdown-authored spec belonging to a product.
- * benefitIndex (nullable) links the PRD to a specific entry in product.benefits[]
- * by position; null means "not tied to any single benefit".
+ * benefitId (nullable) links the PRD to a specific benefit row; null means "not
+ * tied to any single benefit". Set to NULL if the benefit is deleted, so the PRD
+ * surfaces as "benefit removed" rather than silently breaking.
  *
  * Lifecycle (status):
  *   draft        — author is filling the form (PrdFormView, free-form Korean answers)
@@ -108,7 +128,9 @@ export const prd = pgTable("prd", {
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  benefitIndex: integer("benefit_index"),
+  benefitId: text("benefit_id").references(() => benefit.id, {
+    onDelete: "set null",
+  }),
   content: text("content").notNull().default(""),
   status: text("status").notNull().default("draft"),
   /** AI-revised body, populated when entering ai_reviewed status. Null in
@@ -132,7 +154,9 @@ export const prdVersion = pgTable("prd_version", {
   /** 1-based, monotonic per `prdId`. */
   version: integer("version").notNull(),
   title: text("title").notNull(),
-  benefitIndex: integer("benefit_index"),
+  /** Snapshot of the PRD's benefit link at write time. Plain text (no FK) so a
+   * later benefit deletion never rewrites history. */
+  benefitId: text("benefit_id"),
   content: text("content").notNull(),
   status: text("status").notNull(),
   aiReviewedContent: text("ai_reviewed_content"),
@@ -222,3 +246,34 @@ export const policy = pgTable("policy", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [index("policy_product_id_idx").on(t.productId)]);
+
+/** Reference — a directed "import" edge in a product's concept graph. A source
+ * artifact in an OUTER ring imports a target concept in an INNER (more stable)
+ * ring: e.g. a PRD (Spec) imports a benefit / persona (Intent) or a policy
+ * (Principles). The forward edge is the import; querying by (targetKind,
+ * targetId) yields the backlinks ("referenced by").
+ *
+ * `*Kind` is a value from `@/kernel/reference` (prd, benefit, persona, policy,
+ * token, ...). There is intentionally NO cross-table FK on source/target ids —
+ * a generic edge can't FK into many tables — so the ring-order rule and
+ * existence are enforced in the application layer, and a deleted target shows
+ * up as a broken reference in the UI (consistent with how color tokens behave
+ * when their palette is removed). productId scopes every edge and cascades on
+ * product deletion. */
+export const reference = pgTable("reference", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  sourceKind: text("source_kind").notNull(),
+  sourceId: text("source_id").notNull(),
+  targetKind: text("target_kind").notNull(),
+  targetId: text("target_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("reference_edge_unique").on(
+    t.sourceKind, t.sourceId, t.targetKind, t.targetId,
+  ),
+  index("reference_source_idx").on(t.sourceKind, t.sourceId),
+  index("reference_target_idx").on(t.productId, t.targetKind, t.targetId),
+]);

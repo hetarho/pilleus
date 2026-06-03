@@ -12,22 +12,28 @@ import { UpdatePrdUseCase } from "../../application/use-cases/update-prd";
 import { DrizzlePrdRepository } from "../../infrastructure/repositories/drizzle-prd-repository";
 import { DrizzlePrdVersionRepository } from "../../infrastructure/repositories/drizzle-prd-version-repository";
 import { DrizzleProductRepository } from "../../infrastructure/repositories/drizzle-product-repository";
+import { DrizzleBenefitRepository } from "../../infrastructure/repositories/drizzle-benefit-repository";
+import { DrizzlePersonaRepository } from "../../infrastructure/repositories/drizzle-persona-repository";
+import { DrizzlePolicyRepository } from "../../../policy/infrastructure/repositories/drizzle-policy-repository";
 
 const productRepo = new DrizzleProductRepository();
 const prdRepo = new DrizzlePrdRepository();
 const versionRepo = new DrizzlePrdVersionRepository();
+const benefitRepo = new DrizzleBenefitRepository();
+const personaRepo = new DrizzlePersonaRepository();
+const policyRepo = new DrizzlePolicyRepository();
 
 const listInput = z.object({ productId: z.string().uuid() });
 const getInput = z.object({ id: z.string().uuid() });
 const createInput = z.object({
   productId: z.string().uuid(),
   title: z.string().min(1).max(200),
-  benefitIndex: z.number().int().nonnegative().nullable().optional(),
+  benefitId: z.string().uuid().nullable().optional(),
 });
 const updateInput = z.object({
   id: z.string().uuid(),
   title: z.string().min(1).max(200).optional(),
-  benefitIndex: z.number().int().nonnegative().nullable().optional(),
+  benefitId: z.string().uuid().nullable().optional(),
   content: z.string().optional(),
   status: z.enum(["draft", "published", "ai_reviewed"]).optional(),
   aiReviewedContent: z.string().nullable().optional(),
@@ -51,7 +57,9 @@ const completionRouter = createTRPCRouter({
   buildPrompt: protectedProcedure
     .input(buildCompletionPromptInput)
     .query(({ ctx, input }) =>
-      new BuildPrdCompletionPromptUseCase(productRepo, prdRepo).execute({
+      new BuildPrdCompletionPromptUseCase(
+        productRepo, prdRepo, benefitRepo, personaRepo, policyRepo,
+      ).execute({
         prdId: input.id,
         userId: ctx.user.id,
       }),
@@ -95,14 +103,14 @@ export const prdRouter = createTRPCRouter({
   ),
 
   create: protectedProcedure.input(createInput).mutation(({ ctx, input }) =>
-    new CreatePrdUseCase(productRepo, prdRepo, versionRepo).execute({
+    new CreatePrdUseCase(productRepo, prdRepo, versionRepo, benefitRepo).execute({
       ...input,
       userId: ctx.user.id,
     }),
   ),
 
   update: protectedProcedure.input(updateInput).mutation(({ ctx, input }) =>
-    new UpdatePrdUseCase(productRepo, prdRepo, versionRepo).execute({
+    new UpdatePrdUseCase(productRepo, prdRepo, versionRepo, benefitRepo).execute({
       ...input,
       userId: ctx.user.id,
     }),

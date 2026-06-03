@@ -1,6 +1,9 @@
-import { loadOwnedProduct } from "../../../product/application/load-owned-product";
+import { loadProductPromptContext } from "../../../product/application/product-prompt-context";
 import type { LlmPrompt } from "../../../shared/llm";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
+import type { BenefitRepository } from "../../../product/domain/repositories/benefit-repository";
+import type { PersonaRepository } from "../../../product/domain/repositories/persona-repository";
+import type { PolicyRepository } from "../../../policy/domain/repositories/policy-repository";
 import type { TokenGroup } from "@/kernel/design-token";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
 import type { PaletteRepository } from "../../domain/repositories/palette-repository";
@@ -28,10 +31,17 @@ export class BuildTokenGenerationPromptUseCase {
     private readonly products: ProductRepository,
     private readonly palettes: PaletteRepository,
     private readonly tokens: DesignTokenRepository,
+    private readonly benefits: BenefitRepository,
+    private readonly personas: PersonaRepository,
+    private readonly policies: PolicyRepository,
   ) {}
 
   async execute(input: BuildTokenGenerationPromptInput): Promise<LlmPrompt> {
-    const product = await loadOwnedProduct(this.products, input.productId, input.userId);
+    const context = await loadProductPromptContext(
+      { products: this.products, benefits: this.benefits, personas: this.personas, policies: this.policies },
+      input.productId,
+      input.userId,
+    );
 
     const palettes = await this.palettes.findByProductId(input.productId);
     const paletteOptions: PaletteOption[] = palettes.map((p) => ({
@@ -46,7 +56,7 @@ export class BuildTokenGenerationPromptUseCase {
       .map((t) => t.name);
 
     return tokenGenerationTask.buildPrompt({
-      product,
+      context,
       group: input.group,
       density: input.density,
       palettes: paletteOptions,

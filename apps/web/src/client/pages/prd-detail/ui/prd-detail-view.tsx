@@ -16,6 +16,7 @@ import { CopyPromptButton } from "@/features/prd-prompt-copy";
 import { PrdFormView } from "@/features/prd-form-view";
 import { PublishDialog } from "@/features/prd-publish";
 import { HistoryPanel } from "@/features/prd-history";
+import { ReferencesPanel } from "./references-panel";
 
 type PrdStatus = "draft" | "published" | "ai_reviewed";
 
@@ -34,7 +35,7 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const productQuery = useQuery(trpc.product.get.queryOptions({ id: productId }));
+  const benefitsQuery = useQuery(trpc.product.benefit.list.queryOptions({ productId }));
   const prdQuery = useQuery(trpc.product.prd.get.queryOptions({ id: prdId }));
 
   const [title, setTitle] = useState("");
@@ -57,7 +58,7 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
     if (!p) return;
     setTitle(p.title);
     setContent(p.content);
-    setBenefitChoice(p.benefitIndex == null ? "" : String(p.benefitIndex));
+    setBenefitChoice(p.benefitId ?? "");
     setStatus(p.status);
   }, [prdQuery.data]);
 
@@ -79,14 +80,13 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
     }),
   );
 
-  const product = productQuery.data;
-  const benefits = product?.benefits ?? [];
+  const benefits = benefitsQuery.data ?? [];
 
   const handleSave = () => {
     updateMutation.mutate({
       id: prdId,
       title: title.trim() || undefined,
-      benefitIndex: benefitChoice === "" ? null : Number(benefitChoice),
+      benefitId: benefitChoice === "" ? null : benefitChoice,
       content,
       status,
     });
@@ -143,13 +143,15 @@ export function PrdDetailView({ productId, prdId }: PrdDetailViewProps) {
           className="h-9 self-start rounded-md bg-input/30 px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30"
         >
           <option value="">— none —</option>
-          {benefits.map((b, i) => (
-            <option key={i} value={i}>
-              {b}
+          {benefits.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.label}
             </option>
           ))}
         </select>
       </div>
+
+      <ReferencesPanel productId={productId} prdId={prdId} />
 
       {/* View driven entirely by status. Author can't toggle. */}
       {content && status === "draft" && (

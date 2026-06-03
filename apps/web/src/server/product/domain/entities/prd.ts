@@ -8,10 +8,10 @@ interface PrdProps {
   id: string;
   productId: string;
   title: PrdTitle;
-  /** Index into the parent product's benefits[] array, or null if not tied
-   * to a single benefit. Position-based, so a benefit reorder will rotate
-   * the link — accept that for now in exchange for schema simplicity. */
-  benefitIndex: number | null;
+  /** Stable id of the benefit this PRD serves, or null if not tied to a single
+   * benefit. References inward into the Intent ring; cleared to null if the
+   * benefit is deleted. */
+  benefitId: string | null;
   /** Markdown content. In draft, this is the form-composed boilerplate;
    * in published, the author-edited markdown; in ai_reviewed, the frozen
    * "before" version. */
@@ -31,7 +31,7 @@ export class Prd extends AggregateRoot<string> {
   static create(input: {
     productId: string;
     title: string;
-    benefitIndex?: number | null;
+    benefitId?: string | null;
     content?: string;
   }): Prd {
     const now = new Date();
@@ -39,7 +39,7 @@ export class Prd extends AggregateRoot<string> {
       id: crypto.randomUUID(),
       productId: input.productId,
       title: PrdTitle.create(input.title),
-      benefitIndex: input.benefitIndex ?? null,
+      benefitId: input.benefitId ?? null,
       content: input.content ?? "",
       status: "draft",
       aiReviewedContent: null,
@@ -52,7 +52,7 @@ export class Prd extends AggregateRoot<string> {
     id: string;
     productId: string;
     title: string;
-    benefitIndex: number | null;
+    benefitId: string | null;
     content: string;
     status: string;
     aiReviewedContent: string | null;
@@ -63,7 +63,7 @@ export class Prd extends AggregateRoot<string> {
       id: raw.id,
       productId: raw.productId,
       title: PrdTitle.create(raw.title),
-      benefitIndex: raw.benefitIndex,
+      benefitId: raw.benefitId,
       content: raw.content,
       status: normalizeStatus(raw.status),
       aiReviewedContent: raw.aiReviewedContent,
@@ -80,8 +80,8 @@ export class Prd extends AggregateRoot<string> {
     return this.props.title;
   }
 
-  get benefitIndex(): number | null {
-    return this.props.benefitIndex;
+  get benefitId(): string | null {
+    return this.props.benefitId;
   }
 
   get content(): string {
@@ -108,8 +108,8 @@ export class Prd extends AggregateRoot<string> {
     this.props = { ...this.props, title: PrdTitle.create(title), updatedAt: new Date() };
   }
 
-  setBenefitIndex(idx: number | null): void {
-    this.props = { ...this.props, benefitIndex: idx, updatedAt: new Date() };
+  setBenefitId(benefitId: string | null): void {
+    this.props = { ...this.props, benefitId, updatedAt: new Date() };
   }
 
   setContent(content: string): void {

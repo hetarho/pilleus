@@ -7,9 +7,6 @@ export interface UpdateProductOverviewInput {
   userId: string;
   description?: string | null;
   mission: string | null;
-  benefits: string[];
-  principles: string[];
-  actors: string[];
 }
 
 export class UpdateProductOverviewUseCase {
@@ -20,12 +17,7 @@ export class UpdateProductOverviewUseCase {
     if (input.description !== undefined) {
       product.describe(input.description);
     }
-    product.updateOverview({
-      mission: input.mission,
-      benefits: input.benefits,
-      principles: input.principles,
-      actors: input.actors,
-    });
+    product.setMission(input.mission);
     await this.products.save(product);
     return toProductDTO(product);
   }

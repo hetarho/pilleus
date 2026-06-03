@@ -7,6 +7,8 @@ import { ListProductsUseCase } from "../../application/use-cases/list-products";
 import { UpdateProductOverviewUseCase } from "../../application/use-cases/update-product-overview";
 import { DrizzleProductRepository } from "../../infrastructure/repositories/drizzle-product-repository";
 import { prdRouter } from "./prd.router";
+import { benefitRouter } from "./benefit.router";
+import { personaRouter } from "./persona.router";
 
 const productRepository = new DrizzleProductRepository();
 
@@ -21,9 +23,6 @@ const updateOverviewInput = z.object({
   id: z.string().uuid(),
   description: z.string().nullable().optional(),
   mission: z.string().nullable(),
-  benefits: z.array(z.string()),
-  principles: z.array(z.string()),
-  actors: z.array(z.string()),
 });
 
 export const productRouter = createTRPCRouter({
@@ -52,4 +51,6 @@ export const productRouter = createTRPCRouter({
   }),
 
   prd: prdRouter,
+  benefit: benefitRouter,
+  persona: personaRouter,
 });

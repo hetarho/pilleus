@@ -28,10 +28,12 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function PrdListView({ productId }: PrdListViewProps) {
   const trpc = useTRPC();
-  const productQuery = useQuery(trpc.product.get.queryOptions({ id: productId }));
+  const benefitsQuery = useQuery(trpc.product.benefit.list.queryOptions({ productId }));
   const prdsQuery = useQuery(trpc.product.prd.list.queryOptions({ productId }));
 
-  const benefits = productQuery.data?.benefits ?? [];
+  const benefitLabelById = new Map(
+    (benefitsQuery.data ?? []).map((b) => [b.id, b.label] as const),
+  );
   const prds = prdsQuery.data ?? [];
 
   return (
@@ -58,9 +60,7 @@ export function PrdListView({ productId }: PrdListViewProps) {
           <TableBody>
             {prds.map((prd) => {
               const benefit =
-                prd.benefitIndex != null && benefits[prd.benefitIndex]
-                  ? benefits[prd.benefitIndex]
-                  : null;
+                prd.benefitId != null ? benefitLabelById.get(prd.benefitId) ?? null : null;
               return (
                 <TableRow
                   key={prd.id}

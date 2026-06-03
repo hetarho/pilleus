@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../../shared/trpc/init";
 import { DrizzleProductRepository } from "../../../product/infrastructure/repositories/drizzle-product-repository";
+import { DrizzleBenefitRepository } from "../../../product/infrastructure/repositories/drizzle-benefit-repository";
+import { DrizzlePersonaRepository } from "../../../product/infrastructure/repositories/drizzle-persona-repository";
+import { DrizzlePolicyRepository } from "../../../policy/infrastructure/repositories/drizzle-policy-repository";
 import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
 import { SHADE_STEPS } from "@/kernel/palette";
 import { BuildAllTokensGenerationPromptUseCase } from "../../application/use-cases/build-all-tokens-generation-prompt";
@@ -17,6 +20,9 @@ import { DrizzlePaletteRepository } from "../../infrastructure/repositories/driz
 const tokens = new DrizzleDesignTokenRepository();
 const palettes = new DrizzlePaletteRepository();
 const products = new DrizzleProductRepository();
+const benefits = new DrizzleBenefitRepository();
+const personas = new DrizzlePersonaRepository();
+const policies = new DrizzlePolicyRepository();
 
 const groupSchema = z.enum(
   TOKEN_GROUPS as unknown as [TokenGroup, ...TokenGroup[]],
@@ -93,7 +99,9 @@ const generationRouter = createTRPCRouter({
   buildPrompt: protectedProcedure
     .input(generationInputBase)
     .query(({ ctx, input }) =>
-      new BuildTokenGenerationPromptUseCase(products, palettes, tokens).execute({
+      new BuildTokenGenerationPromptUseCase(
+        products, palettes, tokens, benefits, personas, policies,
+      ).execute({
         productId: input.productId,
         userId: ctx.user.id,
         group: input.group,
@@ -122,7 +130,9 @@ const generationRouter = createTRPCRouter({
       }),
     )
     .query(({ ctx, input }) =>
-      new BuildAllTokensGenerationPromptUseCase(products, palettes, tokens).execute({
+      new BuildAllTokensGenerationPromptUseCase(
+        products, palettes, tokens, benefits, personas, policies,
+      ).execute({
         productId: input.productId,
         userId: ctx.user.id,
         density: input.density,

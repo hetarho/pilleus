@@ -7,7 +7,7 @@ export interface PrdVersionSnapshot {
   prdId: string;
   version: number;
   title: string;
-  benefitIndex: number | null;
+  benefitId: string | null;
   content: string;
   status: PrdStatus;
   aiReviewedContent: string | null;

@@ -4,7 +4,7 @@ export interface PrdDTO {
   id: string;
   productId: string;
   title: string;
-  benefitIndex: number | null;
+  benefitId: string | null;
   content: string;
   status: PrdStatus;
   aiReviewedContent: string | null;
@@ -17,7 +17,7 @@ export interface PrdListItemDTO {
   id: string;
   productId: string;
   title: string;
-  benefitIndex: number | null;
+  benefitId: string | null;
   status: PrdStatus;
   /** Latest version number for this PRD (null when no snapshots yet). */
   latestVersion: number | null;
@@ -29,7 +29,7 @@ export const toPrdDTO = (prd: Prd): PrdDTO => ({
   id: prd.id,
   productId: prd.productId,
   title: prd.title.value,
-  benefitIndex: prd.benefitIndex,
+  benefitId: prd.benefitId,
   content: prd.content,
   status: prd.status,
   aiReviewedContent: prd.aiReviewedContent,
@@ -41,7 +41,7 @@ export const toPrdListItemDTO = (prd: Prd, latestVersion: number | null = null):
   id: prd.id,
   productId: prd.productId,
   title: prd.title.value,
-  benefitIndex: prd.benefitIndex,
+  benefitId: prd.benefitId,
   status: prd.status,
   latestVersion,
   createdAt: prd.createdAt,

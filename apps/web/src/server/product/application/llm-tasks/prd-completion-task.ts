@@ -1,7 +1,7 @@
 import { ValidationError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt, LlmTask } from "../../../shared/llm";
 import type { Prd } from "../../domain/entities/prd";
-import type { Product } from "../../domain/entities/product";
+import type { ProductPromptContext } from "../product-prompt-context";
 import { PRD_SECTION_COUNT } from "@/kernel/prd-boilerplate";
 import { PRD_SECTIONS, type PrdSection, extractAnswers } from "@/kernel/prd-sections";
 
@@ -26,7 +26,7 @@ import { PRD_SECTIONS, type PrdSection, extractAnswers } from "@/kernel/prd-sect
 
 export interface PrdCompletionInput {
   prd: Prd;
-  product: Product;
+  context: ProductPromptContext;
 }
 
 export interface PrdCompletionParsed {
@@ -38,10 +38,10 @@ export interface PrdCompletionParsed {
 export const prdCompletionTask: LlmTask<PrdCompletionInput, PrdCompletionParsed> = {
   id: "prd.completion",
 
-  buildPrompt({ prd, product }): LlmPrompt {
+  buildPrompt({ prd, context }): LlmPrompt {
     return {
       system: SYSTEM_PROMPT,
-      user: buildUserPrompt(prd, product),
+      user: buildUserPrompt(prd, context),
     };
   },
 
@@ -79,7 +79,7 @@ user prompt의 각 섹션을 검토해 빈 곳·모호한 부분·서로 어긋�
 
 질문 형식 예시:
 
-> **Q1. 이 기능을 사용하는 주요 actor는 누구인가요?**
+> **Q1. 이 기능을 사용하는 주요 페르소나는 누구인가요?**
 > A) PM
 > B) 엔지니어
 > C) AI 어시스턴트
@@ -89,13 +89,13 @@ user prompt의 각 섹션을 검토해 빈 곳·모호한 부분·서로 어긋�
 모든 모호한 사항이 마무리됐다고 판단되는 시점에서만, 전체 PRD를 **단일 markdown 코드블록**(\`\`\`markdown … \`\`\`)으로 완성해 **반드시 반환**해주세요. 그 전에는 코드블록을 출력하지 마세요. 빈틈이 남아있다면 코드블록 대신 다음 페이즈 질문을 던지세요.
 
 ### 추가 규칙
-- Actor는 user prompt의 Product 컨텍스트에 정의된 Actor 목록에서만 사용해주세요. 새로 만들지 말고, 부족하면 동작 흐름 본문 안에 "추가 actor 필요: ..." 형태로 메모해주세요.
+- 페르소나는 user prompt의 Product 컨텍스트에 정의된 페르소나 목록에서만 사용해주세요. 새로 만들지 말고, 부족하면 동작 흐름 본문 안에 "추가 페르소나 필요: ..." 형태로 메모해주세요.
 - 섹션 번호와 제목은 그대로 유지하고, 1번부터 ${PRD_SECTION_COUNT}번까지 모두 채워주세요.
 - 사용자 입력은 별도의 인용 표시 없이 자연스럽게 흡수해 통합 본문으로 다듬어주세요.
 `;
 
-function buildUserPrompt(prd: Prd, product: Product): string {
-  const productBlock = renderProductContext(product);
+function buildUserPrompt(prd: Prd, context: ProductPromptContext): string {
+  const productBlock = renderProductContext(context);
   const titleValue = prd.title.value.trim();
   const titleBlock = titleValue.length > 0 ? `## PRD 제목\n\n${titleValue}\n` : "";
   const answers = extractAnswers(prd.content);
@@ -128,35 +128,35 @@ function renderSection(sec: PrdSection, answer: string): string {
   return parts.join("\n");
 }
 
-function renderProductContext(product: Product): string {
+function renderProductContext(context: ProductPromptContext): string {
   const lines: string[] = [
     "## Product 컨텍스트",
     "",
     "다음은 이 PRD가 속한 product의 핵심 정보입니다. PRD 본문을 보강할 때 product의 미션·혜택·원칙과 일관되게 다듬어주세요.",
     "",
-    `**이름**: ${product.name.value}`,
+    `**이름**: ${context.name}`,
   ];
-  if (product.description) lines.push(`**설명**: ${product.description}`);
-  if (product.mission) lines.push(`**미션**: ${product.mission}`);
+  if (context.description) lines.push(`**설명**: ${context.description}`);
+  if (context.mission) lines.push(`**미션**: ${context.mission}`);
 
-  if (product.benefits.length > 0) {
+  if (context.benefits.length > 0) {
     lines.push("", "**혜택**:");
-    lines.push(...product.benefits.map((b) => `- ${b}`));
+    lines.push(...context.benefits.map((b) => `- ${b}`));
   }
-  if (product.principles.length > 0) {
+  if (context.principles.length > 0) {
     lines.push("", "**원칙**:");
-    lines.push(...product.principles.map((p) => `- ${p}`));
+    lines.push(...context.principles.map((p) => `- ${p}`));
   }
 
   lines.push("");
-  if (product.actors.length > 0) {
+  if (context.personas.length > 0) {
     lines.push(
-      "**Actor 목록** (시나리오에서 새 actor를 만들지 말고 이 목록만 사용; 부족하면 동작 흐름 본문 안에 \"추가 actor 필요: ...\" 형태로 메모):",
+      "**페르소나 목록** (시나리오에서 새 페르소나를 만들지 말고 이 목록만 사용; 부족하면 동작 흐름 본문 안에 \"추가 페르소나 필요: ...\" 형태로 메모):",
     );
-    lines.push(...product.actors.map((a) => `- ${a}`));
+    lines.push(...context.personas.map((p) => `- ${p}`));
   } else {
     lines.push(
-      "**Actor 목록**: 정의되지 않음. Actor가 필요한 자리는 새로 만들지 말고 동작 흐름 본문 안에 \"추가 actor 필요: ...\" 형태로 메모해주세요.",
+      "**페르소나 목록**: 정의되지 않음. 페르소나가 필요한 자리는 새로 만들지 말고 동작 흐름 본문 안에 \"추가 페르소나 필요: ...\" 형태로 메모해주세요.",
     );
   }
   lines.push("");

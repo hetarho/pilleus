@@ -1,4 +1,5 @@
 import { loadOwnedProduct } from "../../../product/application/load-owned-product";
+import { EMPTY_PROMPT_CONTEXT } from "../../../product/application/product-prompt-context";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
 import { DesignToken } from "../../domain/entities/design-token";
@@ -43,7 +44,7 @@ export class SubmitAllTokensGenerationResponseUseCase {
   async execute(
     input: SubmitAllTokensGenerationResponseInput,
   ): Promise<SubmitAllTokensGenerationResponseOutput> {
-    const product = await loadOwnedProduct(this.products, input.productId, input.userId);
+    await loadOwnedProduct(this.products, input.productId, input.userId);
 
     const palettes = await this.palettes.findByProductId(input.productId);
     const paletteOptions: PaletteOption[] = palettes.map((p) => ({
@@ -64,7 +65,7 @@ export class SubmitAllTokensGenerationResponseUseCase {
     }
 
     const parsed = allTokensGenerationTask.parseResponse(input.rawResponse, {
-      product,
+      context: EMPTY_PROMPT_CONTEXT,
       density: input.density,
       palettes: paletteOptions,
       existingNamesByGroup: Object.fromEntries(

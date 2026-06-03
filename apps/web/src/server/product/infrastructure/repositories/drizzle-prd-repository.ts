@@ -25,7 +25,7 @@ export class DrizzlePrdRepository implements PrdRepository {
         id: prd.id,
         productId: prd.productId,
         title: prd.title.value,
-        benefitIndex: prd.benefitIndex,
+        benefitId: prd.benefitId,
         content: prd.content,
         status: prd.status,
         aiReviewedContent: prd.aiReviewedContent,
@@ -36,7 +36,7 @@ export class DrizzlePrdRepository implements PrdRepository {
         target: prdTable.id,
         set: {
           title: prd.title.value,
-          benefitIndex: prd.benefitIndex,
+          benefitId: prd.benefitId,
           content: prd.content,
           status: prd.status,
           aiReviewedContent: prd.aiReviewedContent,
