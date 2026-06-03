@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { PolicyRepository } from "../../domain/repositories/policy-repository";
 
@@ -17,10 +18,7 @@ export class DeletePolicyUseCase {
     const policy = await this.policies.findById(input.id);
     if (!policy) throw new NotFoundError(`Policy ${input.id} not found`);
 
-    const product = await this.products.findById(policy.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("Access denied");
-    }
+    await loadOwnedProduct(this.products, policy.productId, input.userId);
     await this.policies.delete(input.id);
   }
 }

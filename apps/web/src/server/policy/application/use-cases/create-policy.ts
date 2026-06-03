@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { PolicyCategory } from "@/kernel/policy";
 import { Policy } from "../../domain/entities/policy";
@@ -21,9 +21,7 @@ export class CreatePolicyUseCase {
   ) {}
 
   async execute(input: CreatePolicyInput): Promise<PolicyDTO> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) throw new ForbiddenError("Access denied");
+    await loadOwnedProduct(this.products, input.productId, input.userId);
 
     const existing = await this.policies.findByProductId(input.productId);
     const inBucket = existing.filter(

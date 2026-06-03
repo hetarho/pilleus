@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTRPC } from "@/shared/api/trpc/client";
+import { useEditDialog } from "@/shared/lib/hooks/use-edit-dialog";
 import {
   getSectionLabel,
   getSectionsFor,
@@ -45,12 +46,13 @@ export function PolicyEditDialog({
   policy,
 }: PolicyEditDialogProps) {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const isEdit = policy !== undefined;
   const sections = getSectionsFor(category);
   const isEtc = category === "etc";
+  const { open, setOpen, onSaved } = useEditDialog(
+    trpc.policy.list.queryKey({ productId }),
+  );
 
-  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [currentSection, setCurrentSection] = useState<string | null>(section);
@@ -62,26 +64,11 @@ export function PolicyEditDialog({
     setCurrentSection(policy?.section ?? section);
   }, [open, policy, section]);
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: trpc.policy.list.queryKey({ productId }),
-    });
-
   const createMutation = useMutation(
-    trpc.policy.create.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.policy.create.mutationOptions({ onSuccess: onSaved }),
   );
   const updateMutation = useMutation(
-    trpc.policy.update.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.policy.update.mutationOptions({ onSuccess: onSaved }),
   );
 
   const isPending = createMutation.isPending || updateMutation.isPending;

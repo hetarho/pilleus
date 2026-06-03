@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/shared/api/trpc/client";
+import { useEditDialog } from "@/shared/lib/hooks/use-edit-dialog";
 import { SHADE_STEPS } from "@/entities/palette";
 import {
   TOKEN_GROUP_LABELS,
@@ -57,11 +58,12 @@ export function DesignTokenEditDialog({
   token,
 }: DesignTokenEditDialogProps) {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const isEdit = token !== undefined;
   const isColor = group === "color";
+  const { open, setOpen, onSaved } = useEditDialog(
+    trpc.design.token.list.queryKey({ productId }),
+  );
 
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [paletteId, setPaletteId] = useState("");
   const [paletteStep, setPaletteStep] = useState<number>(500);
@@ -85,27 +87,11 @@ export function DesignTokenEditDialog({
     }
   }, [open, token, isColor]);
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: trpc.design.token.list.queryKey({ productId }),
-    });
-
   const createMutation = useMutation(
-    trpc.design.token.create.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.design.token.create.mutationOptions({ onSuccess: onSaved }),
   );
-
   const updateMutation = useMutation(
-    trpc.design.token.update.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.design.token.update.mutationOptions({ onSuccess: onSaved }),
   );
 
   const isPending = createMutation.isPending || updateMutation.isPending;

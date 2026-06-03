@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/shared/api/trpc/client";
+import { useEditDialog } from "@/shared/lib/hooks/use-edit-dialog";
 import { generateClientShades } from "@/entities/palette";
 import { Button } from "@/shared/ui/button";
 import {
@@ -29,10 +30,11 @@ interface PaletteEditDialogProps {
  * mutation runs on submit. */
 export function PaletteEditDialog({ productId, trigger, palette }: PaletteEditDialogProps) {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const isEdit = palette !== undefined;
+  const { open, setOpen, onSaved } = useEditDialog(
+    trpc.design.palette.list.queryKey({ productId }),
+  );
 
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState(palette?.name ?? "");
   const [seedHex, setSeedHex] = useState(palette?.seedHex ?? "#4f46e5");
 
@@ -45,27 +47,11 @@ export function PaletteEditDialog({ productId, trigger, palette }: PaletteEditDi
     }
   }, [open, palette]);
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: trpc.design.palette.list.queryKey({ productId }),
-    });
-
   const createMutation = useMutation(
-    trpc.design.palette.create.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.design.palette.create.mutationOptions({ onSuccess: onSaved }),
   );
-
   const updateMutation = useMutation(
-    trpc.design.palette.update.mutationOptions({
-      onSuccess: () => {
-        invalidate();
-        setOpen(false);
-      },
-    }),
+    trpc.design.palette.update.mutationOptions({ onSuccess: onSaved }),
   );
 
   const isPending = createMutation.isPending || updateMutation.isPending;
