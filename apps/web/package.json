@@ -4,12 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "pnpm --filter @pilleus/db db:migrate:deploy && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@better-auth/oauth-provider": "^1.6",
     "@hookform/resolvers": "^5",
     "@modelcontextprotocol/sdk": "^1",
     "@pilleus/db": "workspace:*",

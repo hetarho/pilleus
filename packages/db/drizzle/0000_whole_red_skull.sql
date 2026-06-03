@@ -28,58 +28,6 @@ CREATE TABLE "design_token" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "oauth_access_token" (
-	"id" text PRIMARY KEY NOT NULL,
-	"access_token" text NOT NULL,
-	"refresh_token" text,
-	"access_token_expires_at" timestamp NOT NULL,
-	"refresh_token_expires_at" timestamp,
-	"scopes" text NOT NULL,
-	"client_id" text NOT NULL,
-	"user_id" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "oauth_application" (
-	"id" text PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"icon" text,
-	"metadata" text,
-	"client_id" text NOT NULL,
-	"client_secret" text NOT NULL,
-	"redirect_urls" text NOT NULL,
-	"type" text NOT NULL,
-	"disabled" boolean DEFAULT false NOT NULL,
-	"user_id" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "oauth_application_client_id_unique" UNIQUE("client_id")
-);
---> statement-breakpoint
-CREATE TABLE "oauth_authorization_code" (
-	"id" text PRIMARY KEY NOT NULL,
-	"code" text NOT NULL,
-	"client_id" text NOT NULL,
-	"user_id" text,
-	"scopes" text NOT NULL,
-	"redirect_uri" text NOT NULL,
-	"code_challenge" text,
-	"code_challenge_method" text,
-	"expires_at" timestamp NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "oauth_consent" (
-	"id" text PRIMARY KEY NOT NULL,
-	"client_id" text NOT NULL,
-	"user_id" text NOT NULL,
-	"scopes" text NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "palette" (
 	"id" text PRIMARY KEY NOT NULL,
 	"product_id" text NOT NULL,
@@ -174,13 +122,6 @@ CREATE TABLE "verification" (
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "design_token" ADD CONSTRAINT "design_token_product_id_product_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."product"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "design_token" ADD CONSTRAINT "design_token_palette_id_palette_id_fk" FOREIGN KEY ("palette_id") REFERENCES "public"."palette"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_token" ADD CONSTRAINT "oauth_access_token_client_id_oauth_application_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_application"("client_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_token" ADD CONSTRAINT "oauth_access_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_application" ADD CONSTRAINT "oauth_application_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_authorization_code" ADD CONSTRAINT "oauth_authorization_code_client_id_oauth_application_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_application"("client_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_authorization_code" ADD CONSTRAINT "oauth_authorization_code_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_consent" ADD CONSTRAINT "oauth_consent_client_id_oauth_application_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_application"("client_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_consent" ADD CONSTRAINT "oauth_consent_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "palette" ADD CONSTRAINT "palette_product_id_product_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."product"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "policy" ADD CONSTRAINT "policy_product_id_product_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."product"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "prd" ADD CONSTRAINT "prd_product_id_product_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."product"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
