@@ -29,9 +29,7 @@ export interface AllTokensGenerationInput {
   existingNamesByGroup: Readonly<Record<TokenGroup, ReadonlyArray<string>>>;
 }
 
-export interface GeneratedTokenWithGroup extends GeneratedToken {
-  group: TokenGroup;
-}
+export type GeneratedTokenWithGroup = GeneratedToken & { group: TokenGroup };
 
 export interface AllTokensGenerationParsed {
   tokens: GeneratedTokenWithGroup[];

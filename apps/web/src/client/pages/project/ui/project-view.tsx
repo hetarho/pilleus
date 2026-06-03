@@ -4,6 +4,7 @@ import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/shared/api/trpc/client";
+import { useStringList, type StringList } from "@/shared/lib/hooks/use-string-list";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -21,18 +22,19 @@ export function ProjectView({ productId }: ProjectViewProps) {
 
   const [description, setDescription] = useState("");
   const [mission, setMission] = useState("");
-  const [benefits, setBenefits] = useState<string[]>([""]);
-  const [principles, setPrinciples] = useState<string[]>([""]);
-  const [actors, setActors] = useState<string[]>([""]);
+  const benefits = useStringList();
+  const principles = useStringList();
+  const actors = useStringList();
 
   useEffect(() => {
     const p = productQuery.data;
     if (!p) return;
     setDescription(p.description ?? "");
     setMission(p.mission ?? "");
-    setBenefits(p.benefits.length > 0 ? [...p.benefits] : [""]);
-    setPrinciples(p.principles.length > 0 ? [...p.principles] : [""]);
-    setActors(p.actors.length > 0 ? [...p.actors] : [""]);
+    benefits.reset(p.benefits);
+    principles.reset(p.principles);
+    actors.reset(p.actors);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset identities are stable; sync only on new server data
   }, [productQuery.data]);
 
   const updateMutation = useMutation(
@@ -52,9 +54,9 @@ export function ProjectView({ productId }: ProjectViewProps) {
       id: productId,
       description: description.trim() || null,
       mission: mission.trim() || null,
-      benefits: benefits.map((b) => b.trim()).filter(Boolean),
-      principles: principles.map((p) => p.trim()).filter(Boolean),
-      actors: actors.map((a) => a.trim()).filter(Boolean),
+      benefits: benefits.values.map((b) => b.trim()).filter(Boolean),
+      principles: principles.values.map((p) => p.trim()).filter(Boolean),
+      actors: actors.values.map((a) => a.trim()).filter(Boolean),
     });
   };
 
@@ -100,21 +102,21 @@ export function ProjectView({ productId }: ProjectViewProps) {
           label="Benefits"
           hint="Distinct value propositions the product delivers."
         >
-          <ListEditor items={benefits} onChange={setBenefits} placeholder="A benefit" />
+          <ListEditor list={benefits} placeholder="A benefit" />
         </FieldGroup>
 
         <FieldGroup
           label="Principles"
           hint="Non-negotiable rules to follow while building this product."
         >
-          <ListEditor items={principles} onChange={setPrinciples} placeholder="A principle" />
+          <ListEditor list={principles} placeholder="A principle" />
         </FieldGroup>
 
         <FieldGroup
           label="Actors"
           hint="Who or what interacts with this product (end user, admin, scheduler, ...). PRDs reference this list."
         >
-          <ListEditor items={actors} onChange={setActors} placeholder="An actor" />
+          <ListEditor list={actors} placeholder="An actor" />
         </FieldGroup>
 
         <div className="flex items-center gap-3">
@@ -153,47 +155,28 @@ function FieldGroup({
   );
 }
 
-function ListEditor({
-  items,
-  onChange,
-  placeholder,
-}: {
-  items: string[];
-  onChange: (next: string[]) => void;
-  placeholder: string;
-}) {
-  const update = (i: number, value: string) => {
-    const next = [...items];
-    next[i] = value;
-    onChange(next);
-  };
-  const remove = (i: number) => {
-    const next = items.filter((_, idx) => idx !== i);
-    onChange(next.length > 0 ? next : [""]);
-  };
-  const add = () => onChange([...items, ""]);
-
+function ListEditor({ list, placeholder }: { list: StringList; placeholder: string }) {
   return (
     <div className="flex flex-col gap-2">
-      {items.map((item, i) => (
-        <div key={i} className="flex items-center gap-2">
+      {list.rows.map((row) => (
+        <div key={row.id} className="flex items-center gap-2">
           <Input
-            value={item}
-            onChange={(e) => update(i, e.target.value)}
+            value={row.value}
+            onChange={(e) => list.setValue(row.id, e.target.value)}
             placeholder={placeholder}
           />
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => remove(i)}
+            onClick={() => list.remove(row.id)}
             aria-label="Remove item"
           >
             <X className="size-4" />
           </Button>
         </div>
       ))}
-      <Button type="button" variant="outline" size="sm" onClick={add} className="self-start">
+      <Button type="button" variant="outline" size="sm" onClick={list.add} className="self-start">
         <Plus className="size-4" /> Add
       </Button>
     </div>

@@ -24,7 +24,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { palette, prd, prdVersion, product, user } from "./schema";
+import { designToken, palette, policy, prd, prdVersion, product, user } from "./schema";
 
 config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web/.env"),
@@ -394,9 +394,12 @@ const ANSWERS_ALERT_THROTTLE: string[] = [
 ];
 
 async function main() {
-  console.log("[seed] wiping product + prd + palette ...");
-  // prd / palette have FK to product with onDelete cascade; explicit delete
-  // first to keep the order obvious regardless of driver behavior.
+  console.log("[seed] wiping app tables ...");
+  // Everything below cascades from product, but we delete children first
+  // (and design_token before palette, whose FK is set-null) so the wipe is
+  // explicit and order-correct regardless of driver cascade behavior.
+  await db.delete(designToken);
+  await db.delete(policy);
   await db.delete(palette);
   await db.delete(prd);
   await db.delete(product);

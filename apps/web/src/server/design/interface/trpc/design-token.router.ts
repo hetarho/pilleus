@@ -48,15 +48,27 @@ const createInput = z
     },
   );
 
-const updateInput = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1).max(80).optional(),
-  paletteId: z.string().uuid().optional(),
-  paletteStep: stepSchema.optional(),
-  rawValue: z.string().min(1).optional(),
-  /* Pass null to explicitly clear; omit to leave untouched. */
-  description: z.string().trim().max(500).nullable().optional(),
-});
+const updateInput = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().min(1).max(80).optional(),
+    paletteId: z.string().uuid().optional(),
+    paletteStep: stepSchema.optional(),
+    rawValue: z.string().min(1).optional(),
+    /* Pass null to explicitly clear; omit to leave untouched. */
+    description: z.string().trim().max(500).nullable().optional(),
+  })
+  .refine(
+    (v) =>
+      !(
+        v.rawValue !== undefined &&
+        (v.paletteId !== undefined || v.paletteStep !== undefined)
+      ),
+    {
+      message: "Provide either rawValue or a palette ref, not both",
+      path: ["rawValue"],
+    },
+  );
 
 const idInput = z.object({ id: z.string().uuid() });
 const productIdInput = z.object({ productId: z.string().uuid() });

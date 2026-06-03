@@ -82,10 +82,10 @@ export class SubmitTokenGenerationResponseUseCase {
         group: input.group,
         name: spec.name,
         position: nextPosition++,
-        paletteId: spec.paletteId ?? null,
-        paletteStep: spec.paletteStep ?? null,
-        rawValue: spec.rawValue ?? null,
         description: spec.description,
+        ...("rawValue" in spec
+          ? { rawValue: spec.rawValue }
+          : { paletteId: spec.paletteId, paletteStep: spec.paletteStep }),
       });
       await this.tokens.save(token);
       existingNamesInGroup.add(spec.name);

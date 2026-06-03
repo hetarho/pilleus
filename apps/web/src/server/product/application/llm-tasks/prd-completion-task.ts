@@ -165,17 +165,21 @@ function renderProductContext(product: Product): string {
 
 /* ─── response parsing ───────────────────────────────────────────────── */
 
-/* Pull the LAST fenced markdown block out of the response. "Last" because
- * an LLM doing the iterative Q&A loop typically emits questions in earlier
- * turns and the final completed PRD in the last turn; even within one
- * message, reasoning often precedes the final code block. Accept any
- * info-string variant the LLM might pick (markdown / md / "" / etc.). */
+/* Pull the completed PRD out of the response. The LLM may emit several fenced
+ * blocks (reasoning, examples, a trailing question) around the real PRD, so we
+ * prefer the LAST block that actually looks like the PRD — i.e. carries the
+ * boilerplate's "## N." numbered headings — and only fall back to the last
+ * block of any kind when none match. Accepts any info-string (markdown/md/""). */
+const PRD_HEADING_RE = /^##\s*\d+\./m;
+
 function extractMarkdownBlock(text: string): string | null {
   const re = /```(?:[^\n`]*)\n([\s\S]*?)```/g;
+  const blocks: string[] = [];
   let match: RegExpExecArray | null;
-  let last: string | null = null;
   while ((match = re.exec(text)) !== null) {
-    last = match[1] ?? null;
+    if (match[1] != null) blocks.push(match[1]);
   }
-  return last;
+  if (blocks.length === 0) return null;
+  const prdBlocks = blocks.filter((b) => PRD_HEADING_RE.test(b));
+  return (prdBlocks.length > 0 ? prdBlocks : blocks).at(-1) ?? null;
 }

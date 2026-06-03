@@ -37,16 +37,14 @@ export interface TokenGenerationInput {
   existingNames: ReadonlyArray<string>;
 }
 
-/** One generated token, shape depends on group:
- *   color → paletteId + paletteStep set, rawValue undefined
- *   other → rawValue set, palette fields undefined */
-export interface GeneratedToken {
-  name: string;
-  description: string;
-  paletteId?: string;
-  paletteStep?: number;
-  rawValue?: string;
-}
+/** One generated token. Discriminated by which value fields are present:
+ *   color → a palette ref (paletteId + paletteStep)
+ *   other → a rawValue
+ * Modeling it as a union (instead of all-optional fields) means consumers
+ * must narrow before reading, so an impossible mix can't slip through. */
+export type GeneratedToken =
+  | { name: string; description: string; paletteId: string; paletteStep: number }
+  | { name: string; description: string; rawValue: string };
 
 export interface TokenGenerationParsed {
   tokens: GeneratedToken[];
