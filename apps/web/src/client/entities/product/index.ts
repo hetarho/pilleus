@@ -1,5 +1,9 @@
-export type { Product } from "./model/types";
-export { useProductListQuery } from "./api/queries";
+export type { Product, Benefit, Persona } from "./model/types";
+export {
+  useProductListQuery,
+  useBenefitListQuery,
+  usePersonaListQuery,
+} from "./api/queries";
 export { ProductCard } from "./ui/product-card";
 export {
   PRODUCT_SECTIONS,

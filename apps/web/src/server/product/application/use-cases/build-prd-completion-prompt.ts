@@ -1,8 +1,11 @@
 import { NotFoundError } from "../../../shared/errors/domain-error";
-import { loadOwnedProduct } from "../load-owned-product";
 import type { LlmPrompt } from "../../../shared/llm";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
+import type { BenefitRepository } from "../../domain/repositories/benefit-repository";
+import type { PersonaRepository } from "../../domain/repositories/persona-repository";
+import type { PolicyRepository } from "../../../policy/domain/repositories/policy-repository";
+import { loadProductPromptContext } from "../product-prompt-context";
 import { prdCompletionTask } from "../llm-tasks/prd-completion-task";
 
 export interface BuildPrdCompletionPromptInput {
@@ -22,14 +25,21 @@ export class BuildPrdCompletionPromptUseCase {
   constructor(
     private readonly products: ProductRepository,
     private readonly prds: PrdRepository,
+    private readonly benefits: BenefitRepository,
+    private readonly personas: PersonaRepository,
+    private readonly policies: PolicyRepository,
   ) {}
 
   async execute(input: BuildPrdCompletionPromptInput): Promise<LlmPrompt> {
     const prd = await this.prds.findById(input.prdId);
     if (!prd) throw new NotFoundError(`PRD ${input.prdId} not found`);
 
-    const product = await loadOwnedProduct(this.products, prd.productId, input.userId);
+    const context = await loadProductPromptContext(
+      { products: this.products, benefits: this.benefits, personas: this.personas, policies: this.policies },
+      prd.productId,
+      input.userId,
+    );
 
-    return prdCompletionTask.buildPrompt({ prd, product });
+    return prdCompletionTask.buildPrompt({ prd, context });
   }
 }

@@ -5,9 +5,6 @@ export interface ProductDTO {
   name: string;
   description: string | null;
   mission: string | null;
-  benefits: string[];
-  principles: string[];
-  actors: string[];
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -18,9 +15,6 @@ export const toProductDTO = (product: Product): ProductDTO => ({
   name: product.name.value,
   description: product.description,
   mission: product.mission,
-  benefits: [...product.benefits],
-  principles: [...product.principles],
-  actors: [...product.actors],
   userId: product.userId,
   createdAt: product.createdAt,
   updatedAt: product.updatedAt,

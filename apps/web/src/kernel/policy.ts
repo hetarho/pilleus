@@ -1,4 +1,11 @@
-export const POLICY_CATEGORIES = ["design", "ux", "etc"] as const;
+/* A policy's `category` IS the SUBJECT it is a principle about — this is the
+ * single axis the "Principles" ring is divided by (no abstract→concrete tier).
+ *   product — product-wide, non-negotiable principles (the old `principles`)
+ *   design  — design principles (prose); the Design System tokens are the same
+ *             subject's quantified form, surfaced together in the design view
+ *   ux      — UX principles (navigation, forms, feedback, ...)
+ *   etc     — anything not yet a named subject (free-form, no section) */
+export const POLICY_CATEGORIES = ["product", "design", "ux", "etc"] as const;
 export type PolicyCategory = (typeof POLICY_CATEGORIES)[number];
 
 export interface PolicySection {
@@ -8,6 +15,7 @@ export interface PolicySection {
 }
 
 export const POLICY_CATEGORY_LABELS: Record<PolicyCategory, string> = {
+  product: "Product",
   design: "Design",
   ux: "UX",
   etc: "Etc",
@@ -78,6 +86,7 @@ export function getSectionsFor(category: PolicyCategory): readonly PolicySection
       return DESIGN_POLICY_SECTIONS;
     case "ux":
       return UX_POLICY_SECTIONS;
+    case "product":
     case "etc":
       return [];
   }
@@ -88,7 +97,7 @@ export function isPolicyCategory(v: string): v is PolicyCategory {
 }
 
 export function isValidSectionFor(category: PolicyCategory, section: string | null): boolean {
-  if (category === "etc") return section === null;
+  if (getSectionsFor(category).length === 0) return section === null;
   if (section === null) return false;
   return getSectionsFor(category).some((s) => s.id === section);
 }

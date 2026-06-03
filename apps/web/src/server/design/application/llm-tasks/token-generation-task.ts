@@ -1,6 +1,6 @@
 import { ValidationError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt, LlmTask } from "../../../shared/llm";
-import type { Product } from "../../../product/domain/entities/product";
+import type { ProductPromptContext } from "../../../product/application/product-prompt-context";
 import type { TokenGroup } from "@/kernel/design-token";
 import { SHADE_STEPS } from "@/kernel/palette";
 
@@ -27,7 +27,7 @@ export interface PaletteOption {
 }
 
 export interface TokenGenerationInput {
-  product: Product;
+  context: ProductPromptContext;
   group: TokenGroup;
   density: TokenGenerationDensity;
   /** Required when group === "color". Empty array otherwise. */
@@ -118,7 +118,7 @@ function buildSystemPrompt(group: TokenGroup, density: TokenGenerationDensity): 
 이번 작업은 **${group}** 그룹 토큰을 생성하는 일입니다. 다음 절차를 따라주세요.
 
 ### 1단계 — Product 맥락 흡수
-user prompt의 Product 컨텍스트(미션·혜택·원칙·actor)를 읽고, 이 product의 톤·강도·중요한 역할을 파악합니다. (사용자에게 보여줄 필요 없음.)
+user prompt의 Product 컨텍스트(미션·혜택·원칙·페르소나)를 읽고, 이 product의 톤·강도·중요한 역할을 파악합니다. (사용자에게 보여줄 필요 없음.)
 
 ### 2단계 — 필요하면 질문
 빈틈이나 모호한 부분이 있으면 페이즈 단위로 최대 5개 질문을 던지세요. 각 질문에는 3개 이상의 선택지와 "직접 입력" 옵션을 함께 제시합니다. 빈틈이 모두 사라질 때까지 페이즈를 반복합니다.
@@ -158,25 +158,26 @@ JSON 외 다른 텍스트(서론, 결론, 설명)는 코드블록 밖에 절대 
 }
 
 function buildUserPrompt(input: TokenGenerationInput): string {
+  const ctx = input.context;
   const lines: string[] = [
     "## Product 컨텍스트",
     "",
-    `**이름**: ${input.product.name.value}`,
+    `**이름**: ${ctx.name}`,
   ];
-  if (input.product.description) lines.push(`**설명**: ${input.product.description}`);
-  if (input.product.mission) lines.push(`**미션**: ${input.product.mission}`);
+  if (ctx.description) lines.push(`**설명**: ${ctx.description}`);
+  if (ctx.mission) lines.push(`**미션**: ${ctx.mission}`);
 
-  if (input.product.benefits.length > 0) {
+  if (ctx.benefits.length > 0) {
     lines.push("", "**혜택**:");
-    lines.push(...input.product.benefits.map((b) => `- ${b}`));
+    lines.push(...ctx.benefits.map((b) => `- ${b}`));
   }
-  if (input.product.principles.length > 0) {
+  if (ctx.principles.length > 0) {
     lines.push("", "**원칙**:");
-    lines.push(...input.product.principles.map((p) => `- ${p}`));
+    lines.push(...ctx.principles.map((p) => `- ${p}`));
   }
-  if (input.product.actors.length > 0) {
-    lines.push("", "**Actor**:");
-    lines.push(...input.product.actors.map((a) => `- ${a}`));
+  if (ctx.personas.length > 0) {
+    lines.push("", "**페르소나**:");
+    lines.push(...ctx.personas.map((p) => `- ${p}`));
   }
 
   lines.push("", "---", "", `## 생성 대상 그룹: ${input.group}`, "");

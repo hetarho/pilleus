@@ -1,6 +1,6 @@
 import { ValidationError } from "../../../shared/errors/domain-error";
 import type { LlmPrompt, LlmTask } from "../../../shared/llm";
-import type { Product } from "../../../product/domain/entities/product";
+import type { ProductPromptContext } from "../../../product/application/product-prompt-context";
 import { TOKEN_GROUPS, type TokenGroup } from "@/kernel/design-token";
 import { SHADE_STEPS } from "@/kernel/palette";
 import type {
@@ -21,7 +21,7 @@ import type {
  */
 
 export interface AllTokensGenerationInput {
-  product: Product;
+  context: ProductPromptContext;
   density: TokenGenerationDensity;
   palettes: ReadonlyArray<PaletteOption>;
   /** Existing token names, grouped — passed so the LLM can avoid
@@ -139,25 +139,26 @@ JSON 외 텍스트(서론·결론·설명)는 코드블록 밖에 절대 출력�
 }
 
 function buildUserPrompt(input: AllTokensGenerationInput): string {
+  const ctx = input.context;
   const lines: string[] = [
     "## Product 컨텍스트",
     "",
-    `**이름**: ${input.product.name.value}`,
+    `**이름**: ${ctx.name}`,
   ];
-  if (input.product.description) lines.push(`**설명**: ${input.product.description}`);
-  if (input.product.mission) lines.push(`**미션**: ${input.product.mission}`);
+  if (ctx.description) lines.push(`**설명**: ${ctx.description}`);
+  if (ctx.mission) lines.push(`**미션**: ${ctx.mission}`);
 
-  if (input.product.benefits.length > 0) {
+  if (ctx.benefits.length > 0) {
     lines.push("", "**혜택**:");
-    lines.push(...input.product.benefits.map((b) => `- ${b}`));
+    lines.push(...ctx.benefits.map((b) => `- ${b}`));
   }
-  if (input.product.principles.length > 0) {
+  if (ctx.principles.length > 0) {
     lines.push("", "**원칙**:");
-    lines.push(...input.product.principles.map((p) => `- ${p}`));
+    lines.push(...ctx.principles.map((p) => `- ${p}`));
   }
-  if (input.product.actors.length > 0) {
-    lines.push("", "**Actor**:");
-    lines.push(...input.product.actors.map((a) => `- ${a}`));
+  if (ctx.personas.length > 0) {
+    lines.push("", "**페르소나**:");
+    lines.push(...ctx.personas.map((p) => `- ${p}`));
   }
 
   lines.push("", "---", "", "## 사용 가능한 팔레트 (color 토큰 전용)", "");

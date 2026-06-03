@@ -14,6 +14,7 @@ import { DesignTokenEditDialog } from "@/features/design-token-edit";
 import { PaletteEditDialog } from "@/features/palette-edit";
 import { TokenGenerationDialog } from "@/features/token-generation";
 import { Button } from "@/shared/ui/button";
+import { PolicySections } from "./principle-view";
 
 interface DesignViewProps {
   productId: string;
@@ -87,6 +88,18 @@ export function DesignView({ productId }: DesignViewProps) {
           />
         </div>
       </header>
+
+      {/* ── Design principles (prose guardrails) ─────────── */}
+      <section className="mb-10 flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Design principles</h2>
+          <p className="text-xs text-muted-foreground">
+            토큰으로는 표현할 수 없는 상위 디자인 가드레일. 그 아래 Design System은 이 원칙을
+            정형 값(토큰)으로 표현한 것입니다.
+          </p>
+        </div>
+        <PolicySections productId={productId} category="design" />
+      </section>
 
       {/* ── Palettes ─────────────────────────────────────── */}
       <section className="mb-10 flex flex-col gap-3">

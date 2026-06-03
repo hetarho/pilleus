@@ -1,17 +1,18 @@
-import { ValidationError } from "../../../shared/errors/domain-error";
 import { loadOwnedProduct } from "../load-owned-product";
 import { Prd } from "../../domain/entities/prd";
 import { PRD_BOILERPLATE } from "@/kernel/prd-boilerplate";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { PrdVersionRepository } from "../../domain/repositories/prd-version-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
+import type { BenefitRepository } from "../../domain/repositories/benefit-repository";
 import { type PrdDTO, toPrdDTO } from "../dto/prd.dto";
+import { assertBenefitInProduct } from "./assert-benefit-in-product";
 
 export interface CreatePrdInput {
   productId: string;
   userId: string;
   title: string;
-  benefitIndex?: number | null;
+  benefitId?: string | null;
 }
 
 export class CreatePrdUseCase {
@@ -19,21 +20,17 @@ export class CreatePrdUseCase {
     private readonly products: ProductRepository,
     private readonly prds: PrdRepository,
     private readonly versions: PrdVersionRepository,
+    private readonly benefits: BenefitRepository,
   ) {}
 
   async execute(input: CreatePrdInput): Promise<PrdDTO> {
-    const product = await loadOwnedProduct(this.products, input.productId, input.userId);
-
-    if (input.benefitIndex != null) {
-      if (input.benefitIndex < 0 || input.benefitIndex >= product.benefits.length) {
-        throw new ValidationError("benefitIndex out of range for the product's benefits");
-      }
-    }
+    await loadOwnedProduct(this.products, input.productId, input.userId);
+    await assertBenefitInProduct(this.benefits, input.benefitId ?? null, input.productId);
 
     const prd = Prd.create({
       productId: input.productId,
       title: input.title,
-      benefitIndex: input.benefitIndex ?? null,
+      benefitId: input.benefitId ?? null,
       content: PRD_BOILERPLATE,
     });
     await this.prds.save(prd);
@@ -43,7 +40,7 @@ export class CreatePrdUseCase {
       prdId: prd.id,
       version: 1,
       title: prd.title.value,
-      benefitIndex: prd.benefitIndex,
+      benefitId: prd.benefitId,
       content: prd.content,
       status: prd.status,
       aiReviewedContent: prd.aiReviewedContent,

@@ -24,7 +24,18 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { designToken, palette, policy, prd, prdVersion, product, user } from "./schema";
+import {
+  benefit,
+  designToken,
+  palette,
+  persona,
+  policy,
+  prd,
+  prdVersion,
+  product,
+  reference,
+  user,
+} from "./schema";
 
 config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web/.env"),
@@ -145,6 +156,48 @@ const PRD_IDS = {
   severeAlerts: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
   alertThrottle: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3",
 } as const;
+
+const PRODUCT_LIST: string[] = [PRODUCT_IDS.pilleus, PRODUCT_IDS.weather];
+
+/* Benefits & personas are now first-class rows. Benefit ids are fixed so PRDs
+ * can reference them by a stable id (the old position-based benefitIndex is
+ * gone). */
+const BENEFITS: Record<string, string[]> = {
+  [PRODUCT_IDS.pilleus]: [
+    "PRD를 위한 단일 진실 공급원",
+    "AI 보조 PRD 초안 작성",
+    "문서 간 일관성 실시간 점검",
+  ],
+  [PRODUCT_IDS.weather]: ["초정밀 지역 예보", "기상 특보 알림", "프라이버시 우선 텔레메트리"],
+};
+const BENEFIT_IDS: Record<string, string[]> = {
+  [PRODUCT_IDS.pilleus]: [
+    "f1111111-1111-4111-8111-111111111101",
+    "f1111111-1111-4111-8111-111111111102",
+    "f1111111-1111-4111-8111-111111111103",
+  ],
+  [PRODUCT_IDS.weather]: [
+    "f2222222-2222-4222-8222-222222222201",
+    "f2222222-2222-4222-8222-222222222202",
+    "f2222222-2222-4222-8222-222222222203",
+  ],
+};
+const PERSONAS: Record<string, string[]> = {
+  [PRODUCT_IDS.pilleus]: ["PM", "엔지니어", "AI 어시스턴트"],
+  [PRODUCT_IDS.weather]: ["일반 사용자", "기상 데이터 제공자", "알림 스케줄러"],
+};
+/* Principles moved out of the product overview into the Principles ring as
+ * product-category policies. */
+const PRINCIPLES: Record<string, string[]> = {
+  [PRODUCT_IDS.pilleus]: [
+    "스펙은 코드처럼 버전 관리한다",
+    "AI 제안은 인라인으로만, 자동 편집은 절대 금지",
+    "모든 export는 portable Markdown 유지",
+  ],
+  [PRODUCT_IDS.weather]: ["위치 데이터를 절대 판매하지 않는다", "오프라인 우선 — 마지막 예보 캐시"],
+};
+const bid = (productId: string, index: number | null): string | null =>
+  index == null ? null : BENEFIT_IDS[productId]?.[index] ?? null;
 
 /* ── PRD 답변 시드 ─────────────────────────────────────────────
  * 각 배열은 boilerplate 4개 섹션 순서:
@@ -401,7 +454,10 @@ async function main() {
   await db.delete(designToken);
   await db.delete(policy);
   await db.delete(palette);
+  await db.delete(reference);
   await db.delete(prd);
+  await db.delete(benefit);
+  await db.delete(persona);
   await db.delete(product);
 
   const users = await db.select().from(user).limit(1);
@@ -420,17 +476,6 @@ async function main() {
       name: "Pilleus",
       description: "PM과 엔지니어를 위한 AI 기반 PRD 작성 도구",
       mission: "PM과 엔지니어가 첫 시도에 올바른 것을 만들 수 있도록 돕는다",
-      benefits: [
-        "PRD를 위한 단일 진실 공급원",
-        "AI 보조 PRD 초안 작성",
-        "문서 간 일관성 실시간 점검",
-      ],
-      principles: [
-        "스펙은 코드처럼 버전 관리한다",
-        "AI 제안은 인라인으로만, 자동 편집은 절대 금지",
-        "모든 export는 portable Markdown 유지",
-      ],
-      actors: ["PM", "엔지니어", "AI 어시스턴트"],
       userId: u.id,
     },
     {
@@ -438,16 +483,46 @@ async function main() {
       name: "샘플 날씨 앱",
       description: "섹션 뷰를 시험해볼 수 있는 데모 product",
       mission: "사람들에게 우산을 챙겨야 할지 알려준다",
-      benefits: [
-        "초정밀 지역 예보",
-        "기상 특보 알림",
-        "프라이버시 우선 텔레메트리",
-      ],
-      principles: ["위치 데이터를 절대 판매하지 않는다", "오프라인 우선 — 마지막 예보 캐시"],
-      actors: ["일반 사용자", "기상 데이터 제공자", "알림 스케줄러"],
       userId: u.id,
     },
   ]);
+
+  /* Intent ring: benefits + personas as rows. Principles ring: principles as
+   * product-category policies. */
+  await db.insert(benefit).values(
+    PRODUCT_LIST.flatMap((pid) =>
+      BENEFITS[pid].map((label, i) => ({
+        id: BENEFIT_IDS[pid][i],
+        productId: pid,
+        label,
+        position: i,
+      })),
+    ),
+  );
+  await db.insert(persona).values(
+    PRODUCT_LIST.flatMap((pid) =>
+      PERSONAS[pid].map((label, i) => ({
+        id: crypto.randomUUID(),
+        productId: pid,
+        label,
+        description: null,
+        position: i,
+      })),
+    ),
+  );
+  await db.insert(policy).values(
+    PRODUCT_LIST.flatMap((pid) =>
+      PRINCIPLES[pid].map((title, i) => ({
+        id: crypto.randomUUID(),
+        productId: pid,
+        category: "product",
+        section: null,
+        title,
+        body: "",
+        position: i,
+      })),
+    ),
+  );
 
   /* Mix of draft and published so both views are reachable in dev. */
   const prdRows = [
@@ -516,7 +591,15 @@ async function main() {
       status: "draft" as const,
     },
   ];
-  await db.insert(prd).values(prdRows);
+  const prdProduct: Record<string, string> = Object.fromEntries(
+    prdRows.map((p) => [p.id, p.productId]),
+  );
+  await db.insert(prd).values(
+    prdRows.map(({ benefitIndex, ...r }) => ({
+      ...r,
+      benefitId: bid(r.productId, benefitIndex),
+    })),
+  );
 
   /* Auto-seed v1 for PRDs that don't have an explicit version arc below.
    * aiDrafting / consistency / severeAlerts get hand-rolled snapshots to
@@ -534,7 +617,7 @@ async function main() {
       prdId: p.id,
       version: 1,
       title: p.title,
-      benefitIndex: p.benefitIndex,
+      benefitId: bid(p.productId, p.benefitIndex),
       content: p.content,
       status: p.status,
       aiReviewedContent: null,
@@ -636,7 +719,12 @@ async function main() {
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
     },
   ];
-  await db.insert(prdVersion).values(explicitVersionRows);
+  await db.insert(prdVersion).values(
+    explicitVersionRows.map(({ benefitIndex, ...v }) => ({
+      ...v,
+      benefitId: bid(prdProduct[v.prdId], benefitIndex),
+    })),
+  );
 
   /* Seed a few palettes per product so the Design view isn't empty on a
    * fresh seed. Names mirror common palette usage (red/blue/neutral) — the

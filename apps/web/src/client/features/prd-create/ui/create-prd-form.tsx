@@ -16,10 +16,8 @@ export function CreatePrdForm({ productId, onSuccess }: CreatePrdFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const productQuery = useQuery(trpc.product.get.queryOptions({ id: productId }));
-
   const [title, setTitle] = useState("");
-  /** "" means "no benefit linked"; otherwise the benefit's index as string */
+  /** "" means "no benefit linked"; otherwise the benefit's id */
   const [benefitChoice, setBenefitChoice] = useState<string>("");
 
   const createMutation = useMutation(
@@ -35,7 +33,8 @@ export function CreatePrdForm({ productId, onSuccess }: CreatePrdFormProps) {
     }),
   );
 
-  const benefits = productQuery.data?.benefits ?? [];
+  const benefitsQuery = useQuery(trpc.product.benefit.list.queryOptions({ productId }));
+  const benefits = benefitsQuery.data ?? [];
 
   return (
     <form
@@ -46,7 +45,7 @@ export function CreatePrdForm({ productId, onSuccess }: CreatePrdFormProps) {
         createMutation.mutate({
           productId,
           title,
-          benefitIndex: benefitChoice === "" ? null : Number(benefitChoice),
+          benefitId: benefitChoice === "" ? null : benefitChoice,
         });
       }}
     >
@@ -73,9 +72,9 @@ export function CreatePrdForm({ productId, onSuccess }: CreatePrdFormProps) {
           className="h-9 rounded-md bg-input/30 px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30"
         >
           <option value="">— none —</option>
-          {benefits.map((b, i) => (
-            <option key={i} value={i}>
-              {b}
+          {benefits.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.label}
             </option>
           ))}
         </select>

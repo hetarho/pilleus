@@ -14,7 +14,7 @@ export interface PrdVersionListItemDTO {
 }
 
 export interface PrdVersionDTO extends PrdVersionListItemDTO {
-  benefitIndex: number | null;
+  benefitId: string | null;
   content: string;
   aiReviewedContent: string | null;
 }
@@ -33,7 +33,7 @@ export const toPrdVersionDTO = (s: PrdVersionSnapshot): PrdVersionDTO => ({
   prdId: s.prdId,
   version: s.version,
   title: s.title,
-  benefitIndex: s.benefitIndex,
+  benefitId: s.benefitId,
   content: s.content,
   status: s.status,
   aiReviewedContent: s.aiReviewedContent,

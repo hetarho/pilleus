@@ -6,16 +6,10 @@ interface ProductProps {
   name: ProductName;
   description: string | null;
   mission: string | null;
-  benefits: readonly string[];
-  principles: readonly string[];
-  actors: readonly string[];
   userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
-
-const sanitizeList = (xs: readonly string[]): string[] =>
-  xs.map((x) => x.trim()).filter((x) => x.length > 0);
 
 const sanitizeOptional = (s: string | null | undefined): string | null => {
   if (!s) return null;
@@ -39,9 +33,6 @@ export class Product extends AggregateRoot<string> {
       name: ProductName.create(input.name),
       description: sanitizeOptional(input.description),
       mission: null,
-      benefits: [],
-      principles: [],
-      actors: [],
       userId: input.userId,
       createdAt: now,
       updatedAt: now,
@@ -53,9 +44,6 @@ export class Product extends AggregateRoot<string> {
     name: string;
     description: string | null;
     mission: string | null;
-    benefits: string[];
-    principles: string[];
-    actors: string[];
     userId: string;
     createdAt: Date;
     updatedAt: Date;
@@ -65,9 +53,6 @@ export class Product extends AggregateRoot<string> {
       name: ProductName.create(raw.name),
       description: raw.description,
       mission: raw.mission,
-      benefits: raw.benefits,
-      principles: raw.principles,
-      actors: raw.actors,
       userId: raw.userId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
@@ -84,18 +69,6 @@ export class Product extends AggregateRoot<string> {
 
   get mission(): string | null {
     return this.props.mission;
-  }
-
-  get benefits(): readonly string[] {
-    return this.props.benefits;
-  }
-
-  get principles(): readonly string[] {
-    return this.props.principles;
-  }
-
-  get actors(): readonly string[] {
-    return this.props.actors;
   }
 
   get userId(): string {
@@ -118,21 +91,10 @@ export class Product extends AggregateRoot<string> {
     this.props = { ...this.props, description: sanitizeOptional(description), updatedAt: new Date() };
   }
 
-  /** Replace the full overview (mission + benefits + principles + actors) atomically. */
-  updateOverview(input: {
-    mission: string | null;
-    benefits: readonly string[];
-    principles: readonly string[];
-    actors: readonly string[];
-  }): void {
-    this.props = {
-      ...this.props,
-      mission: sanitizeOptional(input.mission),
-      benefits: sanitizeList(input.benefits),
-      principles: sanitizeList(input.principles),
-      actors: sanitizeList(input.actors),
-      updatedAt: new Date(),
-    };
+  /** Mission is the single scalar at the Intent core; benefits and personas are
+   * separate aggregates now, edited through their own use cases. */
+  setMission(mission: string | null): void {
+    this.props = { ...this.props, mission: sanitizeOptional(mission), updatedAt: new Date() };
   }
 
   isOwnedBy(userId: string): boolean {
