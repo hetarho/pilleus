@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
+import { ValidationError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../load-owned-product";
 import { Prd } from "../../domain/entities/prd";
 import { PRD_BOILERPLATE } from "@/kernel/prd-boilerplate";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
@@ -21,9 +22,7 @@ export class CreatePrdUseCase {
   ) {}
 
   async execute(input: CreatePrdInput): Promise<PrdDTO> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) throw new ForbiddenError("Access denied");
+    const product = await loadOwnedProduct(this.products, input.productId, input.userId);
 
     if (input.benefitIndex != null) {
       if (input.benefitIndex < 0 || input.benefitIndex >= product.benefits.length) {

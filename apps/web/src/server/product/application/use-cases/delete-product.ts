@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../load-owned-product";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
 
 export interface DeleteProductInput {
@@ -10,13 +10,7 @@ export class DeleteProductUseCase {
   constructor(private readonly products: ProductRepository) {}
 
   async execute(input: DeleteProductInput): Promise<void> {
-    const product = await this.products.findById(input.id);
-    if (!product) {
-      throw new NotFoundError(`Product ${input.id} not found`);
-    }
-    if (!product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have permission to delete this product");
-    }
+    const product = await loadOwnedProduct(this.products, input.id, input.userId);
     await this.products.delete(input.id);
   }
 }

@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
 
@@ -17,10 +18,7 @@ export class DeleteDesignTokenUseCase {
     const token = await this.tokens.findById(input.id);
     if (!token) throw new NotFoundError(`Token ${input.id} not found`);
 
-    const product = await this.products.findById(token.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have permission to delete this token");
-    }
+    await loadOwnedProduct(this.products, token.productId, input.userId);
 
     await this.tokens.delete(input.id);
   }

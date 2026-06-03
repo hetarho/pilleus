@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { PaletteRepository } from "../../domain/repositories/palette-repository";
 
@@ -17,10 +18,7 @@ export class DeletePaletteUseCase {
     const palette = await this.palettes.findById(input.id);
     if (!palette) throw new NotFoundError(`Palette ${input.id} not found`);
 
-    const product = await this.products.findById(palette.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have permission to delete this palette");
-    }
+    await loadOwnedProduct(this.products, palette.productId, input.userId);
 
     await this.palettes.delete(input.id);
   }

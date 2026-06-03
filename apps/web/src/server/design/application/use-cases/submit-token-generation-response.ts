@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { TokenGroup } from "@/kernel/design-token";
 import { DesignToken } from "../../domain/entities/design-token";
@@ -45,9 +45,7 @@ export class SubmitTokenGenerationResponseUseCase {
   async execute(
     input: SubmitTokenGenerationResponseInput,
   ): Promise<SubmitTokenGenerationResponseOutput> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) throw new ForbiddenError("Access denied");
+    const product = await loadOwnedProduct(this.products, input.productId, input.userId);
 
     const palettes = await this.palettes.findByProductId(input.productId);
     const paletteOptions: PaletteOption[] = palettes.map((p) => ({

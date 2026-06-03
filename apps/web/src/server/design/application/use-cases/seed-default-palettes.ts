@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import { Palette } from "../../domain/entities/palette";
 import type { PaletteRepository } from "../../domain/repositories/palette-repository";
@@ -20,11 +20,7 @@ export class SeedDefaultPalettesUseCase {
   ) {}
 
   async execute(input: { productId: string; userId: string }): Promise<PaletteDTO[]> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have access to this product");
-    }
+    await loadOwnedProduct(this.products, input.productId, input.userId);
     const existing = await this.palettes.findByProductId(input.productId);
     let position = existing.length;
     const created: Palette[] = [];

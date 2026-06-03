@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
+import { ValidationError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../load-owned-product";
 import type { PrdStatus } from "../../domain/entities/prd";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { PrdVersionRepository } from "../../domain/repositories/prd-version-repository";
@@ -43,10 +44,7 @@ export class UpdatePrdUseCase {
     const prd = await this.prds.findById(input.id);
     if (!prd) throw new NotFoundError(`PRD ${input.id} not found`);
 
-    const product = await this.products.findById(prd.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("Access denied");
-    }
+    const product = await loadOwnedProduct(this.products, prd.productId, input.userId);
 
     /* Snapshot pre-mutation state so we can compare and skip writing a
      * version row when the user clicked Save without actually changing

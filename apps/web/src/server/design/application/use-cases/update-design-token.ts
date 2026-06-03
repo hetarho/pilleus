@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { Palette } from "../../domain/entities/palette";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
@@ -30,10 +31,7 @@ export class UpdateDesignTokenUseCase {
     const token = await this.tokens.findById(input.id);
     if (!token) throw new NotFoundError(`Token ${input.id} not found`);
 
-    const product = await this.products.findById(token.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have permission to update this token");
-    }
+    await loadOwnedProduct(this.products, token.productId, input.userId);
 
     if (input.name !== undefined) token.rename(input.name);
     if (input.description !== undefined) token.setDescription(input.description);

@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { Palette } from "../../domain/entities/palette";
 import type { DesignTokenRepository } from "../../domain/repositories/design-token-repository";
@@ -13,11 +13,7 @@ export class ListDesignTokensUseCase {
   ) {}
 
   async execute(input: { productId: string; userId: string }): Promise<DesignTokenDTO[]> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have access to this product");
-    }
+    await loadOwnedProduct(this.products, input.productId, input.userId);
     const [tokens, palettes] = await Promise.all([
       this.tokens.findByProductId(input.productId),
       this.palettes.findByProductId(input.productId),

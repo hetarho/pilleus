@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError, ValidationError } from "../../../shared/errors/domain-error";
+import { ValidationError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../../../product/application/load-owned-product";
 import type { ProductRepository } from "../../../product/domain/repositories/product-repository";
 import type { TokenGroup } from "@/kernel/design-token";
 import type { Palette } from "../../domain/entities/palette";
@@ -26,11 +27,7 @@ export class CreateDesignTokenUseCase {
   ) {}
 
   async execute(input: CreateDesignTokenInput): Promise<DesignTokenDTO> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("You don't have access to this product");
-    }
+    await loadOwnedProduct(this.products, input.productId, input.userId);
 
     /* For color tokens, verify the referenced palette exists and belongs to
      * the same product — otherwise we'd allow cross-product palette refs. */

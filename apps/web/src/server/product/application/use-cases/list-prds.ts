@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../load-owned-product";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { PrdVersionRepository } from "../../domain/repositories/prd-version-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
@@ -12,9 +12,7 @@ export class ListPrdsUseCase {
   ) {}
 
   async execute(input: { productId: string; userId: string }): Promise<PrdListItemDTO[]> {
-    const product = await this.products.findById(input.productId);
-    if (!product) throw new NotFoundError(`Product ${input.productId} not found`);
-    if (!product.isOwnedBy(input.userId)) throw new ForbiddenError("Access denied");
+    await loadOwnedProduct(this.products, input.productId, input.userId);
 
     const prds = await this.prds.findByProductId(input.productId);
     /* One batched query for max(version) per prd_id rather than N+1 round

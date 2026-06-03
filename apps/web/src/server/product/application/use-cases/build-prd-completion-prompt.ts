@@ -1,4 +1,5 @@
-import { ForbiddenError, NotFoundError } from "../../../shared/errors/domain-error";
+import { NotFoundError } from "../../../shared/errors/domain-error";
+import { loadOwnedProduct } from "../load-owned-product";
 import type { LlmPrompt } from "../../../shared/llm";
 import type { PrdRepository } from "../../domain/repositories/prd-repository";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
@@ -27,10 +28,7 @@ export class BuildPrdCompletionPromptUseCase {
     const prd = await this.prds.findById(input.prdId);
     if (!prd) throw new NotFoundError(`PRD ${input.prdId} not found`);
 
-    const product = await this.products.findById(prd.productId);
-    if (!product || !product.isOwnedBy(input.userId)) {
-      throw new ForbiddenError("Access denied");
-    }
+    const product = await loadOwnedProduct(this.products, prd.productId, input.userId);
 
     return prdCompletionTask.buildPrompt({ prd, product });
   }
