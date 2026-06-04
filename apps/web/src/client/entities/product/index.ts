@@ -8,6 +8,7 @@ export { ProductCard } from "./ui/product-card";
 export {
   PRODUCT_SECTIONS,
   PRODUCT_NAV_GROUPS,
+  PRODUCT_OVERVIEW_ITEM,
   isProductSectionId,
   getProductSection,
   productHref,

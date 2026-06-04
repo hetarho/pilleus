@@ -4,6 +4,7 @@ import { ChevronRight, Folder, FolderOpen, Plus } from "lucide-react";
 import Link from "next/link";
 import {
   PRODUCT_NAV_GROUPS,
+  PRODUCT_OVERVIEW_ITEM,
   productHref,
   productSectionHref,
   useProductListQuery,
@@ -35,6 +36,8 @@ import {
   SidebarTrigger,
 } from "@/shared/ui/sidebar";
 import { useActiveProductSection } from "../model/use-active-product-section";
+
+const OverviewIcon = PRODUCT_OVERVIEW_ITEM.icon;
 
 export function AppSidebar() {
   const { data: session } = useSession();
@@ -86,6 +89,17 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent>
+              {/* Overview — product root, standalone above the rings. */}
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild isActive={isOnProjectRoot}>
+                    <Link href={productHref(product.id)}>
+                      <OverviewIcon className="size-4" />
+                      <span>{PRODUCT_OVERVIEW_ITEM.label}</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
               {PRODUCT_NAV_GROUPS.map((group) => (
                 <div key={group.label}>
                   <div className="px-2 pt-3 pb-1 text-[0.625rem] font-medium uppercase tracking-wider text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">

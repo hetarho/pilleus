@@ -2,10 +2,12 @@ import {
   Compass,
   FileText,
   Frame,
+  Gift,
   LayoutDashboard,
   MousePointerClick,
   Palette,
   Shapes,
+  Target,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -15,6 +17,9 @@ import {
  * the edge, dependencies pointing inward. The "Principles" ring is divided by
  * SUBJECT (what each principle is about) — never by abstraction tier. */
 export type ProductSectionId =
+  | "mission"
+  | "persona"
+  | "benefit"
   | "product"
   | "design"
   | "ux"
@@ -30,6 +35,9 @@ export interface ProductSection {
 }
 
 export const PRODUCT_SECTIONS: readonly ProductSection[] = [
+  { id: "mission",    label: "Mission",    icon: Target },
+  { id: "persona",    label: "Persona",    icon: Users },
+  { id: "benefit",    label: "Benefit",    icon: Gift },
   { id: "product",    label: "Product",    icon: Compass },
   { id: "design",     label: "Design",     icon: Palette },
   { id: "ux",         label: "UX",         icon: MousePointerClick },
@@ -52,16 +60,29 @@ export interface ProductNavGroup {
   items: readonly ProductNavItem[];
 }
 
+/* The product root (section: null). Sits ABOVE the rings as a read-only
+ * summary of the Intent ring; rendered as a standalone item in the sidebar,
+ * not inside any ring group. */
+export const PRODUCT_OVERVIEW_ITEM: ProductNavItem = {
+  section: null,
+  label: "Overview",
+  icon: LayoutDashboard,
+};
+
 /* The four rings, core → edge. Dependencies point inward: Surface is derived
  * from Spec, Spec is written against Principles, Principles serve Intent.
- *   Intent      — why/who/what: mission, benefits, personas (the Overview)
+ *   Intent      — why/who/what: mission, persona, benefit (each its own section)
  *   Principles  — the rules every spec follows, divided by subject
  *   Spec        — the authored source of truth (PRD)
  *   Surface     — artifacts derived from a Spec (wireframe, user story) */
 export const PRODUCT_NAV_GROUPS: readonly ProductNavGroup[] = [
   {
     label: "Intent",
-    items: [{ section: null, label: "Overview", icon: LayoutDashboard }],
+    items: [
+      { section: "mission", label: "Mission", icon: Target },
+      { section: "persona", label: "Persona", icon: Users },
+      { section: "benefit", label: "Benefit", icon: Gift },
+    ],
   },
   {
     label: "Principles",

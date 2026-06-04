@@ -4,7 +4,8 @@ import { CreateProductUseCase } from "../../application/use-cases/create-product
 import { DeleteProductUseCase } from "../../application/use-cases/delete-product";
 import { GetProductUseCase } from "../../application/use-cases/get-product";
 import { ListProductsUseCase } from "../../application/use-cases/list-products";
-import { UpdateProductOverviewUseCase } from "../../application/use-cases/update-product-overview";
+import { SetProductMissionUseCase } from "../../application/use-cases/set-product-mission";
+import { UpdateProductDescriptionUseCase } from "../../application/use-cases/update-product-description";
 import { DrizzleProductRepository } from "../../infrastructure/repositories/drizzle-product-repository";
 import { prdRouter } from "./prd.router";
 import { benefitRouter } from "./benefit.router";
@@ -19,10 +20,14 @@ const createInput = z.object({
 
 const idInput = z.object({ id: z.string().uuid() });
 
-const updateOverviewInput = z.object({
+const setMissionInput = z.object({
   id: z.string().uuid(),
-  description: z.string().nullable().optional(),
   mission: z.string().nullable(),
+});
+
+const updateDescriptionInput = z.object({
+  id: z.string().uuid(),
+  description: z.string().nullable(),
 });
 
 export const productRouter = createTRPCRouter({
@@ -38,8 +43,12 @@ export const productRouter = createTRPCRouter({
     new CreateProductUseCase(productRepository).execute({ ...input, userId: ctx.user.id }),
   ),
 
-  updateOverview: protectedProcedure.input(updateOverviewInput).mutation(({ ctx, input }) =>
-    new UpdateProductOverviewUseCase(productRepository).execute({ ...input, userId: ctx.user.id }),
+  setMission: protectedProcedure.input(setMissionInput).mutation(({ ctx, input }) =>
+    new SetProductMissionUseCase(productRepository).execute({ ...input, userId: ctx.user.id }),
+  ),
+
+  updateDescription: protectedProcedure.input(updateDescriptionInput).mutation(({ ctx, input }) =>
+    new UpdateProductDescriptionUseCase(productRepository).execute({ ...input, userId: ctx.user.id }),
   ),
 
   delete: protectedProcedure.input(idInput).mutation(async ({ ctx, input }) => {

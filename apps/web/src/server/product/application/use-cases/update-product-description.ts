@@ -2,22 +2,20 @@ import { loadOwnedProduct } from "../load-owned-product";
 import type { ProductRepository } from "../../domain/repositories/product-repository";
 import { type ProductDTO, toProductDTO } from "../dto/product.dto";
 
-export interface UpdateProductOverviewInput {
+export interface UpdateProductDescriptionInput {
   id: string;
   userId: string;
-  description?: string | null;
-  mission: string | null;
+  description: string | null;
 }
 
-export class UpdateProductOverviewUseCase {
+/** Description is product identity (it sits above the rings), edited on the
+ * product Overview — not part of any single Intent artifact. */
+export class UpdateProductDescriptionUseCase {
   constructor(private readonly products: ProductRepository) {}
 
-  async execute(input: UpdateProductOverviewInput): Promise<ProductDTO> {
+  async execute(input: UpdateProductDescriptionInput): Promise<ProductDTO> {
     const product = await loadOwnedProduct(this.products, input.id, input.userId);
-    if (input.description !== undefined) {
-      product.describe(input.description);
-    }
-    product.setMission(input.mission);
+    product.describe(input.description);
     await this.products.save(product);
     return toProductDTO(product);
   }
