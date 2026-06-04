@@ -50,7 +50,7 @@ config({
  * regex — narrow but stable since we control both files. */
 const BOILERPLATE_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "../../../apps/web/src/server/product/domain/prd-boilerplate.ts",
+  "../../../apps/web/src/kernel/prd-boilerplate.ts",
 );
 const PRD_HUMAN_MARKER = "✏️";
 const PRD_AI_MARKER = "🤖";

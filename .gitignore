@@ -22,6 +22,9 @@ dist/
 *.pem
 *.tsbuildinfo
 
+# docker (machine-local overrides)
+docker-compose.override.yml
+
 # drizzle
 drizzle/meta
 

@@ -19,7 +19,8 @@ const shouldSeed = args.includes("--seed");
 
 function run(cmd, cmdArgs) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, cmdArgs, { stdio: "inherit" });
+    // shell: true 라야 Windows 에서 pnpm.cmd 런처를 해석한다 (없으면 spawn ENOENT)
+    const child = spawn(cmd, cmdArgs, { stdio: "inherit", shell: true });
     child.on("close", (code) => {
       if (code === 0) resolve();
       else reject(new Error(`${cmd} ${cmdArgs.join(" ")} exited ${code}`));
