@@ -13,6 +13,8 @@ export {
   getProductSection,
   productHref,
   productSectionHref,
+  productPrdHref,
+  parseProductRoute,
   type ProductSection,
   type ProductSectionId,
   type ProductNavGroup,

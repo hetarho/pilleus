@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { productPrdHref } from "@/entities/product";
 import { useTRPC } from "@/shared/api/trpc/client";
 import { CreatePrdDialog } from "@/features/prd-create";
 import { Button } from "@/shared/ui/button";
@@ -69,7 +70,7 @@ export function PrdListView({ productId }: PrdListViewProps) {
                 >
                   <TableCell>
                     <Link
-                      href={`/dashboard/products/${productId}/prd/${prd.id}`}
+                      href={productPrdHref(productId, prd.id)}
                       className="block font-medium hover:underline"
                     >
                       {prd.title}

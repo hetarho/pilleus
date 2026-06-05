@@ -7,7 +7,7 @@ interface GoogleSignInButtonProps {
   callbackURL?: string;
 }
 
-export function GoogleSignInButton({ callbackURL = "/dashboard" }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ callbackURL = "/project" }: GoogleSignInButtonProps) {
   return (
     <Button
       className="w-full"

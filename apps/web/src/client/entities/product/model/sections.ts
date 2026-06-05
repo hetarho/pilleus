@@ -119,9 +119,29 @@ export function getProductSection(id: ProductSectionId): ProductSection {
 }
 
 export function productHref(productId: string): string {
-  return `/dashboard/products/${productId}`;
+  return `/project/${productId}`;
 }
 
 export function productSectionHref(productId: string, sectionId: ProductSectionId): string {
-  return `/dashboard/products/${productId}/${sectionId}`;
+  return `/project/${productId}/${sectionId}`;
+}
+
+export function productPrdHref(productId: string, prdId: string): string {
+  return `/project/${productId}/prd/${prdId}`;
+}
+
+/* Pulls the active product (and optional section) out of a pathname so the top
+ * bar can highlight the current project. Mirrors the /project route shape. */
+const PROJECT_ROUTE = /^\/project\/([^/]+)(?:\/([^/]+))?/;
+
+export function parseProductRoute(pathname: string): {
+  productId: string | null;
+  sectionId: ProductSectionId | null;
+} {
+  const match = pathname.match(PROJECT_ROUTE);
+  if (!match) return { productId: null, sectionId: null };
+  const [, productId, rawSection] = match;
+  const sectionId =
+    rawSection && isProductSectionId(rawSection) ? rawSection : null;
+  return { productId, sectionId };
 }

@@ -1,18 +1,30 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "@/entities/session";
 import { SignOutButton } from "@/features/auth-sign-out";
 import { ThemeSwitch } from "@/features/theme-switch";
-import { SidebarTrigger } from "@/shared/ui/sidebar";
+import { ProjectSwitcher } from "./project-switcher";
 
+/* Top bar for the project workspace. The sidebar is gone; project navigation
+ * now lives in the centered ProjectSwitcher dropdown. Logo sits left, account
+ * controls right, switcher absolutely centered so it stays put regardless of
+ * how wide the side regions get. */
 export function AppHeader() {
   const { data } = useSession();
 
   return (
-    <header className="flex h-14 items-center gap-3 bg-background px-4">
-      {/* Hamburger only on mobile — desktop has its own trigger inside the sidebar header.
-       * Tailwind `md:` breakpoint (768px) aligns with shadcn sidebar's mobile threshold. */}
-      <SidebarTrigger className="md:hidden" />
+    <header className="relative flex h-14 items-center gap-3 border-b bg-background px-4">
+      <Link href="/project" className="text-base font-semibold">
+        Pilleus
+      </Link>
+
+      <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+        <div className="pointer-events-auto">
+          <ProjectSwitcher />
+        </div>
+      </div>
+
       <div className="ml-auto flex items-center gap-2">
         {data?.user && (
           <span className="hidden text-sm text-muted-foreground sm:inline">
