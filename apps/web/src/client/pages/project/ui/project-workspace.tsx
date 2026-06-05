@@ -87,7 +87,12 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {sectionActive && (
           <motion.div
-            key="section-editor"
+            /* Keyed by mode (not segment) so it slides only on open/close, but
+             * REMOUNTS cleanly if the layout flips between sheet/panel — e.g.
+             * after a reload, where useIsMobile resolves from false→true post
+             * mount. Without this the abandoned width axis stays at ~0% and the
+             * sheet is invisible. */
+            key={isMobile ? "section-sheet" : "section-panel"}
             className="relative shrink-0 overflow-hidden bg-background"
             initial={isMobile ? { height: "0vh" } : { width: "0%" }}
             animate={isMobile ? { height: "62vh" } : { width: "60%" }}
