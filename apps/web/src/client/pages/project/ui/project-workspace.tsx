@@ -13,7 +13,6 @@ import {
 import { useTRPC } from "@/shared/api/trpc/client";
 import { useIsMobile } from "@/shared/lib/hooks/use-mobile";
 import { cn } from "@/shared/lib/cn";
-import { ProjectView } from "./project-view";
 import { RingMap } from "./ring-map";
 
 const EASE: [number, number, number, number] = [0.3, 0.05, 0.45, 1];
@@ -68,16 +67,8 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
         isMobile ? "flex-col" : "flex-row",
       )}
     >
-      {/* Identity + ring — flex-1, pushed (and eased) by the editor. */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-8 px-6 py-8">
-        <motion.div
-          className={cn("w-full max-w-2xl", sectionActive && "pointer-events-none")}
-          animate={{ opacity: sectionActive ? 0.45 : 1 }}
-          transition={{ duration: 0.4, ease: EASE }}
-        >
-          <ProjectView productId={productId} />
-        </motion.div>
-
+      {/* Ring — flex-1, pushed (and eased) by the editor. */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-2xl">
           <RingMap
             productId={productId}

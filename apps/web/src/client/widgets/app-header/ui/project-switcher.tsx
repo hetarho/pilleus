@@ -67,7 +67,11 @@ export function ProjectSwitcher() {
               <DropdownMenuItem
                 key={product.id}
                 onSelect={() => router.push(productHref(product.id))}
-                className="cursor-pointer gap-2"
+                className={cn(
+                  "cursor-pointer gap-2 hover:bg-accent hover:text-accent-foreground",
+                  product.id === activeProductId &&
+                    "bg-accent font-medium text-accent-foreground",
+                )}
               >
                 <Check
                   className={cn(
@@ -88,7 +92,7 @@ export function ProjectSwitcher() {
               e.preventDefault();
               setCreateOpen(true);
             }}
-            className="cursor-pointer gap-2"
+            className="cursor-pointer gap-2 hover:bg-accent hover:text-accent-foreground"
           >
             <Plus className="size-4 shrink-0" />
             <span>새 프로젝트</span>
