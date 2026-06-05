@@ -264,13 +264,16 @@ function Node({
       href={productSectionHref(productId, item.section)}
       className={cn(
         "inline-flex w-full items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm transition-transform duration-150 hover:scale-[1.06]",
+        isCore && "justify-center",
+        /* active and inactive are mutually exclusive so the active highlight
+         * (solid bg + ring) never flickers under the inactive hover style. */
         isCore
-          ? "justify-center bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25"
-          : "bg-card text-foreground hover:shadow-md",
-        active &&
-          (isCore
+          ? active
             ? "bg-primary-foreground text-primary ring-2 ring-primary-foreground"
-            : "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"),
+            : "bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25"
+          : active
+            ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+            : "bg-card text-foreground hover:shadow-md",
       )}
     >
       <Icon className="size-3.5 shrink-0" />
