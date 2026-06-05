@@ -27,9 +27,12 @@ export function AppHeader() {
 
       <div className="ml-auto flex items-center gap-2">
         {data?.user && (
-          <span className="hidden text-sm text-muted-foreground sm:inline">
+          <Link
+            href="/account"
+            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline"
+          >
             {data.user.name}
-          </span>
+          </Link>
         )}
         <ThemeSwitch />
         {data?.user && <SignOutButton />}

@@ -1,22 +1,23 @@
-import type { LlmProvider, LlmTask } from "./llm-task";
+import type { LlmTask } from "./llm-task";
+import type { LlmCompletionOptions, LlmProvider } from "./provider";
 
 /**
  * Server-side composition of an LLM task: build → call provider → parse.
  *
- * Not used by any router yet — we're on the manual (copy/paste) flow while
- * we ship under a subscription model with no server-side API key. Kept
- * here so when the key lands, the only additions are:
- *   - an `LlmProvider` infrastructure adapter (e.g. AnthropicProvider)
- *   - a new tRPC mutation that calls `runLlmTask(task, input, provider)`
- *     and then persists, replacing the two-step buildPrompt/submit flow.
- * The task definitions and parsing logic stay identical.
+ * This is the generic primitive for "fire and parse" tasks. Note that the
+ * task-specific server runs in `product`/`design` deliberately do NOT use
+ * this — they compose Build + Submit use cases instead, so the parse +
+ * persist + collision-reporting path stays identical to the manual flow's
+ * single write site. `runLlmTask` stays available for tasks that have no
+ * persistence step (pure transforms, previews, validation runs).
  */
 export async function runLlmTask<TInput, TParsed>(
   task: LlmTask<TInput, TParsed>,
   input: TInput,
   provider: LlmProvider,
+  options?: LlmCompletionOptions,
 ): Promise<TParsed> {
   const prompt = task.buildPrompt(input);
-  const raw = await provider.complete(prompt);
-  return task.parseResponse(raw, input);
+  const result = await provider.complete(prompt, options);
+  return task.parseResponse(result.text, input);
 }

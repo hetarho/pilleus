@@ -9,6 +9,11 @@ import {
   TOKEN_GROUP_LABELS,
   TOKEN_GROUPS,
 } from "@/entities/design-token";
+import {
+  ModelPicker,
+  useLlmCatalogQuery,
+  type LlmModelSelection,
+} from "@/entities/llm";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -72,7 +77,13 @@ export function TokenGenerationDialog({
 
   const [open, setOpen] = useState(false);
   const [density, setDensity] = useState<Density>("balanced");
+  const [selection, setSelection] = useState<LlmModelSelection | null>(null);
   const [rawResponse, setRawResponse] = useState("");
+
+  /* Availability hint for the server-run block. Same query the picker uses
+   * (react-query dedupes), so this is free. */
+  const catalogQuery = useLlmCatalogQuery();
+  const anyAvailable = (catalogQuery.data ?? []).some((p) => p.available);
   const [copyState, setCopyState] = useState<"idle" | "loading" | "copied" | "error">(
     "idle",
   );
@@ -114,6 +125,47 @@ export function TokenGenerationDialog({
   );
 
   const submitMutation = isAll ? submitAll : submitGroup;
+
+  /* Server-run path: one click → server resolves the provider from the
+   * user's key, calls the model, parses + persists. Same write path as the
+   * manual submit. */
+  const runGroup = useMutation(
+    trpc.design.token.generation.run.mutationOptions({
+      onSuccess: () => {
+        invalidate();
+        setOpen(false);
+      },
+    }),
+  );
+  const runAll = useMutation(
+    trpc.design.token.generation.allRun.mutationOptions({
+      onSuccess: () => {
+        invalidate();
+        setOpen(false);
+      },
+    }),
+  );
+  const runMutation = isAll ? runAll : runGroup;
+
+  const handleRun = () => {
+    if (!selection) return;
+    if (isAll) {
+      runAll.mutate({
+        productId,
+        density,
+        providerId: selection.providerId,
+        modelId: selection.modelId,
+      });
+    } else {
+      runGroup.mutate({
+        productId,
+        group,
+        density,
+        providerId: selection.providerId,
+        modelId: selection.modelId,
+      });
+    }
+  };
 
   const handleCopy = async () => {
     setCopyState("loading");
@@ -230,8 +282,45 @@ export function TokenGenerationDialog({
             </div>
           )}
 
+          {/* 방법 1 — 서버가 연결된 키로 직접 모델 호출 (one-click). */}
+          <div className="flex flex-col gap-2 rounded-md border bg-card/40 p-3">
+            <Label className="text-sm font-medium">방법 1 · 서버에서 바로 생성</Label>
+            <p className="text-xs text-muted-foreground">
+              연결된 API 키로 서버가 직접 모델을 호출해 토큰을 만들어 저장합니다.
+            </p>
+            <div className="flex items-center gap-2">
+              <ModelPicker
+                value={selection}
+                onChange={setSelection}
+                className="min-w-0 flex-1"
+              />
+              <Button
+                type="button"
+                onClick={handleRun}
+                disabled={!selection || runMutation.isPending}
+              >
+                {runMutation.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                {runMutation.isPending ? "생성 중..." : "생성"}
+              </Button>
+            </div>
+            {!anyAvailable && !catalogQuery.isLoading && (
+              <p className="text-xs text-muted-foreground">
+                연결된 API 키가 없습니다. 아래 <strong>방법 2</strong>(프롬프트 복사)를
+                사용하거나, 내 정보 관리에서 키를 연결하세요.
+              </p>
+            )}
+            {runMutation.error && (
+              <p className="text-sm text-destructive">{runMutation.error.message}</p>
+            )}
+          </div>
+
+          {/* 방법 2 — 프롬프트 복사 → 외부 LLM 실행 → 응답 붙여넣기 (BYOK 없이도 동작). */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="gen-response">LLM 응답</Label>
+            <Label htmlFor="gen-response">방법 2 · 직접 실행 후 붙여넣기</Label>
             <div className="flex gap-2">
               <Button
                 type="button"

@@ -38,11 +38,7 @@ export interface LlmTask<TInput, TParsed> {
   parseResponse(rawResponse: string, input: TInput): TParsed;
 }
 
-/**
- * Outbound port for a model provider. Not consumed yet — the manual flow
- * doesn't need one — but defining it now means switching to an API key
- * later is one infrastructure adapter away.
- */
-export interface LlmProvider {
-  complete(prompt: LlmPrompt): Promise<string>;
-}
+/* `LlmProvider` (the outbound port a server-side run calls) now lives in
+ * `./provider`, alongside the model-ref / options / credential types it
+ * needs. Kept separate from the task so a task definition never imports
+ * anything about providers — prompts stay pure data. */

@@ -8,7 +8,9 @@ import { GetPrdVersionUseCase } from "../../application/use-cases/get-prd-versio
 import { ListPrdsUseCase } from "../../application/use-cases/list-prds";
 import { ListPrdVersionsUseCase } from "../../application/use-cases/list-prd-versions";
 import { SubmitPrdCompletionResponseUseCase } from "../../application/use-cases/submit-prd-completion-response";
+import { RunPrdCompletionUseCase } from "../../application/use-cases/run-prd-completion";
 import { UpdatePrdUseCase } from "../../application/use-cases/update-prd";
+import { resolveLlmProviderUseCase } from "../../../llm/composition";
 import { DrizzlePrdRepository } from "../../infrastructure/repositories/drizzle-prd-repository";
 import { DrizzlePrdVersionRepository } from "../../infrastructure/repositories/drizzle-prd-version-repository";
 import { DrizzleProductRepository } from "../../infrastructure/repositories/drizzle-product-repository";
@@ -52,6 +54,15 @@ const submitCompletionResponseInput = z.object({
   id: z.string().uuid(),
   rawResponse: z.string().min(1),
 });
+/* Server-side run: resolve a provider from the user's credential, then chain
+ * build → provider.complete → submit. `buildPrompt`/`submit` stay for the
+ * manual copy-paste flow; `run` is the one-click path. Both end at the same
+ * persistence (submit). */
+const runCompletionInput = z.object({
+  id: z.string().uuid(),
+  providerId: z.string().min(1),
+  modelId: z.string().min(1).optional(),
+});
 
 const completionRouter = createTRPCRouter({
   buildPrompt: protectedProcedure
@@ -73,6 +84,24 @@ const completionRouter = createTRPCRouter({
         rawResponse: input.rawResponse,
       }),
     ),
+  run: protectedProcedure
+    .input(runCompletionInput)
+    .mutation(async ({ ctx, input }) => {
+      const { provider, modelId } = await resolveLlmProviderUseCase().execute({
+        userId: ctx.user.id,
+        providerId: input.providerId,
+        modelId: input.modelId,
+      });
+      const build = new BuildPrdCompletionPromptUseCase(
+        productRepo, prdRepo, benefitRepo, personaRepo, policyRepo,
+      );
+      const submit = new SubmitPrdCompletionResponseUseCase(productRepo, prdRepo, versionRepo);
+      return new RunPrdCompletionUseCase(build, submit, provider).execute({
+        prdId: input.id,
+        userId: ctx.user.id,
+        modelId,
+      });
+    }),
 });
 
 const versionsRouter = createTRPCRouter({

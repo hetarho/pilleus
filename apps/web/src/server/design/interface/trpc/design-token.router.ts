@@ -13,9 +13,12 @@ import { DeleteDesignTokenUseCase } from "../../application/use-cases/delete-des
 import { ListDesignTokensUseCase } from "../../application/use-cases/list-design-tokens";
 import { SubmitAllTokensGenerationResponseUseCase } from "../../application/use-cases/submit-all-tokens-generation-response";
 import { SubmitTokenGenerationResponseUseCase } from "../../application/use-cases/submit-token-generation-response";
+import { RunTokenGenerationUseCase } from "../../application/use-cases/run-token-generation";
+import { RunAllTokensGenerationUseCase } from "../../application/use-cases/run-all-tokens-generation";
 import { UpdateDesignTokenUseCase } from "../../application/use-cases/update-design-token";
 import { DrizzleDesignTokenRepository } from "../../infrastructure/repositories/drizzle-design-token-repository";
 import { DrizzlePaletteRepository } from "../../infrastructure/repositories/drizzle-palette-repository";
+import { resolveLlmProviderUseCase } from "../../../llm/composition";
 
 const tokens = new DrizzleDesignTokenRepository();
 const palettes = new DrizzlePaletteRepository();
@@ -93,6 +96,18 @@ const generationInputBase = z.object({
 const submitGenerationInput = generationInputBase.extend({
   rawResponse: z.string().min(1),
 });
+/* Server-side run: resolve a provider from the user's credential, then chain
+ * build → provider.complete → submit. Shares the manual flow's persistence. */
+const providerSelection = {
+  providerId: z.string().min(1),
+  modelId: z.string().min(1).optional(),
+};
+const runGenerationInput = generationInputBase.extend(providerSelection);
+const allRunInput = z.object({
+  productId: z.string().uuid(),
+  density: z.enum(DENSITIES),
+  ...providerSelection,
+});
 
 /* Per-group generation: pick one group, generate just that group's tokens. */
 const generationRouter = createTRPCRouter({
@@ -119,6 +134,26 @@ const generationRouter = createTRPCRouter({
         rawResponse: input.rawResponse,
       }),
     ),
+  run: protectedProcedure
+    .input(runGenerationInput)
+    .mutation(async ({ ctx, input }) => {
+      const { provider, modelId } = await resolveLlmProviderUseCase().execute({
+        userId: ctx.user.id,
+        providerId: input.providerId,
+        modelId: input.modelId,
+      });
+      const build = new BuildTokenGenerationPromptUseCase(
+        products, palettes, tokens, benefits, personas, policies,
+      );
+      const submit = new SubmitTokenGenerationResponseUseCase(products, palettes, tokens);
+      return new RunTokenGenerationUseCase(build, submit, provider).execute({
+        productId: input.productId,
+        userId: ctx.user.id,
+        group: input.group,
+        density: input.density,
+        modelId,
+      });
+    }),
 
   /* All-groups generation: one prompt, one response, all 5 groups
    * filled in a single LLM round trip. */
@@ -154,6 +189,25 @@ const generationRouter = createTRPCRouter({
         rawResponse: input.rawResponse,
       }),
     ),
+  allRun: protectedProcedure
+    .input(allRunInput)
+    .mutation(async ({ ctx, input }) => {
+      const { provider, modelId } = await resolveLlmProviderUseCase().execute({
+        userId: ctx.user.id,
+        providerId: input.providerId,
+        modelId: input.modelId,
+      });
+      const build = new BuildAllTokensGenerationPromptUseCase(
+        products, palettes, tokens, benefits, personas, policies,
+      );
+      const submit = new SubmitAllTokensGenerationResponseUseCase(products, palettes, tokens);
+      return new RunAllTokensGenerationUseCase(build, submit, provider).execute({
+        productId: input.productId,
+        userId: ctx.user.id,
+        density: input.density,
+        modelId,
+      });
+    }),
 });
 
 export const designTokenRouter = createTRPCRouter({

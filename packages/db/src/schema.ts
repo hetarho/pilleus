@@ -247,6 +247,38 @@ export const policy = pgTable("policy", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [index("policy_product_id_idx").on(t.productId)]);
 
+/** BYOK LLM credential — a single user's connected API key for one provider.
+ *
+ * The key is NEVER stored in plaintext: it's encrypted with AES-256-GCM
+ * (server master key in CREDENTIAL_ENCRYPTION_KEY) in the application layer,
+ * and only the ciphertext + iv + auth tag land here. `keyHint` is the last 4
+ * chars of the original key, kept so the UI can show "…ab12" without ever
+ * decrypting. One row per (userId, providerId) — connecting again replaces it.
+ *
+ * This is the store behind `StoreCredentialResolver`; once present, the
+ * server-run path ("생성하기") uses the user's own key instead of a shared
+ * dev key. Cascade-deletes with the user. */
+export const llmCredential = pgTable("llm_credential", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  /** Provider id from the catalog (e.g. "anthropic", "openai"). */
+  providerId: text("provider_id").notNull(),
+  /** AES-256-GCM ciphertext of the API key (base64). */
+  ciphertext: text("ciphertext").notNull(),
+  /** Random 96-bit IV used for this row (base64). */
+  iv: text("iv").notNull(),
+  /** GCM authentication tag (base64). */
+  authTag: text("auth_tag").notNull(),
+  /** Last 4 chars of the plaintext key, for display only. */
+  keyHint: text("key_hint").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("llm_credential_user_provider_unique").on(t.userId, t.providerId),
+]);
+
 /** Reference — a directed "import" edge in a product's concept graph. A source
  * artifact in an OUTER ring imports a target concept in an INNER (more stable)
  * ring: e.g. a PRD (Spec) imports a benefit / persona (Intent) or a policy
