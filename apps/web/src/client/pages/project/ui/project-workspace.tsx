@@ -88,16 +88,19 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Section editor — a sibling that pushes the ring (no overlap). Grows in
-       * from the right (desktop) or up from the bottom (mobile). */}
+      {/* Section editor — a sibling that pushes the ring (no overlap). The PANEL
+       * only slides on open/close (stable key, so switching sections doesn't
+       * re-slide it); the CONTENT crossfades by segment. Sizing uses vh/% that
+       * resolve reliably (a `%` height collapses under the min-h-screen chain).
+       * Grows in from the right (desktop) or up from the bottom (mobile). */}
       <AnimatePresence>
         {sectionActive && (
           <motion.div
-            key={segment}
+            key="section-editor"
             className="relative shrink-0 overflow-hidden bg-background"
-            initial={isMobile ? { height: "0%" } : { width: "0%" }}
-            animate={isMobile ? { height: "60%" } : { width: "60%" }}
-            exit={isMobile ? { height: "0%" } : { width: "0%" }}
+            initial={isMobile ? { height: "0vh" } : { width: "0%" }}
+            animate={isMobile ? { height: "62vh" } : { width: "60%" }}
+            exit={isMobile ? { height: "0vh" } : { width: "0%" }}
             transition={{ duration: 0.45, ease: EASE }}
           >
             <div
@@ -106,8 +109,16 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
                 isMobile ? "h-full w-full" : "h-full w-[60vw]",
               )}
             >
-              <div className="px-6 pt-5">{backLink}</div>
-              <div className="min-h-0 flex-1">{children}</div>
+              <div className="shrink-0 px-6 pt-5">{backLink}</div>
+              <motion.div
+                key={segment}
+                className="min-h-0 flex-1"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, ease: EASE }}
+              >
+                {children}
+              </motion.div>
             </div>
           </motion.div>
         )}
