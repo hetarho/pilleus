@@ -45,8 +45,7 @@ export function MissionView({ productId }: MissionViewProps) {
 
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">
-          The single biggest goal — why this product exists. 가장 안정적인 코어이며, 다른 모든 링이
-          이 미션을 근거로 삼습니다.
+          이 제품이 세상에 있어야 할 이유. 길게 쓸 것 없이 한 문장이면 충분합니다.
         </p>
         <Textarea
           className="mt-1"

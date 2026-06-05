@@ -49,7 +49,7 @@ export function ProjectView({ productId }: ProjectViewProps) {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <p className="text-sm text-muted-foreground">
-          이 product의 기획 레이어. 안쪽 ring일수록 안정적이고, 바깥 ring은 안쪽을 근거로 삼습니다.
+          이 제품을 이루는 네 겹의 기획. 가운데로 갈수록 뿌리에 가깝고, 바깥일수록 자주 바뀝니다.
         </p>
       </header>
 

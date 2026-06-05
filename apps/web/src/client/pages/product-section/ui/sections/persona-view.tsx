@@ -38,7 +38,7 @@ export function PersonaView({ productId }: PersonaViewProps) {
 
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">
-          누구를 위해 만드는가. PRD가 이 목록을 import해 시나리오를 작성합니다.
+          이걸 실제로 쓸 사람들. 여기 적어두면 PRD가 그들을 데려다 씁니다.
         </p>
         <RowListEditor
           items={personasQuery.data ?? []}

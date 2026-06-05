@@ -38,7 +38,7 @@ export function BenefitView({ productId }: BenefitViewProps) {
 
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">
-          그들에게 어떤 이득을 제공하는가. PRD가 정확히 하나의 benefit을 import합니다.
+          사용자가 손에 쥐는 것. PRD 하나는 정확히 이 중 하나에 매달립니다.
         </p>
         <RowListEditor
           items={benefitsQuery.data ?? []}
