@@ -106,7 +106,9 @@ export function RingMap({ productId, mission, activeSection = null, compact = fa
         </p>
       )}
 
-      <div className={cn("relative mx-auto aspect-square w-full", compact ? "max-w-56" : "max-w-124")}>
+      {/* Size stays constant across modes; the workspace shell scales the whole
+       * ring with a transform so the shrink animates smoothly (no layout snap). */}
+      <div className="relative mx-auto aspect-square w-full max-w-124">
         {/* Soft, slowly breathing glow behind the core. */}
         <motion.div
           aria-hidden

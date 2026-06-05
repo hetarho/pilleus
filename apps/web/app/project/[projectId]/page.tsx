@@ -1,10 +1,7 @@
-import { ProjectView } from "@/pages/project";
-
-export default async function ProjectOverviewPage({
-  params,
-}: {
-  params: Promise<{ projectId: string }>;
-}) {
-  const { projectId } = await params;
-  return <ProjectView productId={projectId} />;
+/* The Overview content (project identity + the ring) is rendered by the
+ * workspace shell in this segment's layout, so the index route itself has
+ * nothing to add — the shell shows the identity panel whenever no section is
+ * open. Keeping this a no-op page avoids rendering the identity twice. */
+export default function ProjectOverviewPage() {
+  return null;
 }
