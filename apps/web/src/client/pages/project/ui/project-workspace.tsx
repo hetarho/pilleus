@@ -21,14 +21,16 @@ const EASE: [number, number, number, number] = [0.3, 0.05, 0.45, 1];
 /* The project workspace shell.
  *
  * The identity panel and the ring are rendered HERE (not via `children`) and
- * stay mounted, so they never reflow on their own. A section editor is the only
- * `children`, so it can never flash in the centered slot before opening.
- * `useSelectedLayoutSegment` (not the pathname) drives the mode so it's in sync
- * with which `children` are mounted.
+ * stay mounted, so a section editor is the only `children` and can never flash
+ * in the centered slot. `useSelectedLayoutSegment` (not the pathname) drives the
+ * mode so it's in lockstep with which `children` are mounted.
  *
- * Desktop: a 4:6 split. The editor expands in from the right while the ring is
- * pushed into the left 40% (flexbox does the easing — no transform distortion).
- * Mobile: the editor rises as a bottom sheet while the ring lifts and shrinks. */
+ * The editor is a real sibling that PUSHES the ring — it never overlaps it. On
+ * desktop it grows in from the right to a 4:6 split (ring pushed into the left
+ * 40%); on mobile it grows up from the bottom (ring pushed up into the top
+ * 40%). Either way flexbox eases the ring across — no transforms, no overlap.
+ * Its inner content is a fixed size pinned to the leading edge, so it slides
+ * cleanly into view instead of revealing an empty margin first. */
 export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const segment = useSelectedLayoutSegment();
@@ -62,25 +64,12 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "relative flex flex-1 overflow-hidden",
+        "flex flex-1 overflow-hidden",
         isMobile ? "flex-col" : "flex-row",
       )}
     >
-      {/* Identity + ring. On desktop this is a flex child that shrinks to ~40%
-       * as the editor grows (ring slides left). On mobile the editor overlays,
-       * so the ring lifts and shrinks via its own transform instead. */}
-      <motion.div
-        className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-8 px-6 py-8"
-        animate={
-          isMobile
-            ? {
-                y: sectionActive ? "-10%" : "0%",
-                scale: sectionActive ? 0.82 : 1,
-              }
-            : { y: "0%", scale: 1 }
-        }
-        transition={{ duration: 0.5, ease: EASE }}
-      >
+      {/* Identity + ring — flex-1, pushed (and eased) by the editor. */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-8 px-6 py-8">
         <motion.div
           className={cn("w-full max-w-2xl", sectionActive && "pointer-events-none")}
           animate={{ opacity: sectionActive ? 0.45 : 1 }}
@@ -97,43 +86,31 @@ export function ProjectWorkspace({ children }: { children: React.ReactNode }) {
             compact={sectionActive}
           />
         </div>
-      </motion.div>
+      </div>
 
-      {/* Section editor — a hidden page that comes out: from the right on
-       * desktop (pushing the split to 4:6), from the bottom as a sheet on
-       * mobile. No border; it's a page, not a sidebar. */}
+      {/* Section editor — a sibling that pushes the ring (no overlap). Grows in
+       * from the right (desktop) or up from the bottom (mobile). */}
       <AnimatePresence>
-        {sectionActive &&
-          (isMobile ? (
-            <motion.div
-              key={segment}
-              className="absolute inset-x-0 bottom-0 z-20 flex h-[82%] flex-col overflow-hidden rounded-t-2xl bg-background shadow-2xl"
-              initial={{ y: "100%" }}
-              animate={{ y: "0%" }}
-              exit={{ y: "100%" }}
-              transition={{ duration: 0.4, ease: EASE }}
+        {sectionActive && (
+          <motion.div
+            key={segment}
+            className="relative shrink-0 overflow-hidden bg-background"
+            initial={isMobile ? { height: "0%" } : { width: "0%" }}
+            animate={isMobile ? { height: "60%" } : { width: "60%" }}
+            exit={isMobile ? { height: "0%" } : { width: "0%" }}
+            transition={{ duration: 0.45, ease: EASE }}
+          >
+            <div
+              className={cn(
+                "absolute left-0 top-0 flex flex-col overflow-y-auto bg-background",
+                isMobile ? "h-full w-full" : "h-full w-[60vw]",
+              )}
             >
-              <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted" />
-              <div className="px-6 pt-3">{backLink}</div>
-              <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={segment}
-              className="relative h-full shrink-0 overflow-hidden"
-              initial={{ width: "0%" }}
-              animate={{ width: "60%" }}
-              exit={{ width: "0%" }}
-              transition={{ duration: 0.45, ease: EASE }}
-            >
-              {/* Fixed-width inner so content doesn't reflow while the panel
-               * width animates; the growing clip reveals it from the right. */}
-              <div className="absolute right-0 top-0 flex h-full w-[60vw] flex-col overflow-y-auto bg-background">
-                <div className="px-6 pt-5">{backLink}</div>
-                <div className="min-h-0 flex-1">{children}</div>
-              </div>
-            </motion.div>
-          ))}
+              <div className="px-6 pt-5">{backLink}</div>
+              <div className="min-h-0 flex-1">{children}</div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
