@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { productHref, useProductListQuery } from "@/entities/product";
 import { useSession } from "@/entities/session";
+import { useIsClient } from "@/shared/lib/hooks/use-is-client";
 
 /* Landing for /project (no id). If the user has projects, send them straight
  * to the most recent one's Overview; otherwise prompt them to create one via
  * the switcher in the top bar. */
 export function ProjectHomeView() {
   const router = useRouter();
+  const isClient = useIsClient();
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
   const productsQuery = useProductListQuery({ enabled: isAuthenticated });
@@ -20,7 +22,11 @@ export function ProjectHomeView() {
     if (firstProductId) router.replace(productHref(firstProductId));
   }, [firstProductId, router]);
 
-  if (productsQuery.isLoading || firstProductId) {
+  /* Auth/query state only exists on the client. Render the loading state on the
+   * server and the first client render alike (gate on `isClient`) so the
+   * hydrated HTML matches — otherwise the empty-state vs loading branch differs
+   * and React throws a hydration mismatch. */
+  if (!isClient || productsQuery.isLoading || firstProductId) {
     return (
       <main className="flex flex-1 items-center justify-center">
         <p className="text-sm text-muted-foreground">불러오는 중…</p>
