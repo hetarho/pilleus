@@ -6,15 +6,15 @@ import { useTRPC } from "@/shared/api/trpc/client";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { RingMap } from "./ring-map";
 
 interface ProjectViewProps {
   productId: string;
 }
 
 /* Product Overview — the product root, above the rings. It owns the product's
- * identity (name + description) and renders the planning layers as concentric
- * rings; each ring artifact is edited on its own section, reached from the map. */
+ * identity (name + description). The planning-layer rings are rendered by the
+ * workspace shell (the route layout) so they persist while editing a section;
+ * here we only own identity. */
 export function ProjectView({ productId }: ProjectViewProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -45,7 +45,7 @@ export function ProjectView({ productId }: ProjectViewProps) {
   const product = productQuery.data;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <p className="text-sm text-muted-foreground">
@@ -81,8 +81,6 @@ export function ProjectView({ productId }: ProjectViewProps) {
           )}
         </div>
       </section>
-
-      <RingMap productId={productId} mission={product.mission} />
     </main>
   );
 }

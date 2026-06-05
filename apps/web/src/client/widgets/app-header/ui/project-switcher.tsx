@@ -49,7 +49,7 @@ export function ProjectSwitcher() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="h-9 gap-2 px-3 text-sm font-semibold"
+            className="h-9 cursor-pointer gap-2 px-3 text-sm font-semibold focus-visible:border-transparent focus-visible:ring-0 data-[state=open]:bg-accent"
           >
             <span className="max-w-56 truncate">
               {activeProduct?.name ?? "프로젝트 선택"}
@@ -67,7 +67,7 @@ export function ProjectSwitcher() {
               <DropdownMenuItem
                 key={product.id}
                 onSelect={() => router.push(productHref(product.id))}
-                className="gap-2"
+                className="cursor-pointer gap-2"
               >
                 <Check
                   className={cn(
@@ -88,7 +88,7 @@ export function ProjectSwitcher() {
               e.preventDefault();
               setCreateOpen(true);
             }}
-            className="gap-2"
+            className="cursor-pointer gap-2"
           >
             <Plus className="size-4 shrink-0" />
             <span>새 프로젝트</span>

@@ -54,12 +54,27 @@ const ORDER: readonly RingLabel[] = ["Intent", "Principles", "Spec", "Surface"];
 interface RingMapProps {
   productId: string;
   mission: string | null;
+  /** Section currently being edited; its ring is spotlit and node highlighted. */
+  activeSection?: ProductSectionId | null;
+  /** Docked/navigator mode: smaller, no intro copy or legend. */
+  compact?: boolean;
+}
+
+/** Which ring a given section lives in (mission/persona/benefit → Intent, …). */
+function ringOfSection(section: ProductSectionId): RingLabel | null {
+  for (const group of PRODUCT_NAV_GROUPS) {
+    if (group.items.some((i) => i.section === section)) {
+      return group.label as RingLabel;
+    }
+  }
+  return null;
 }
 
 /** The product's planning layers, drawn as concentric orbits. The stable core
  * (Intent) holds mission/persona/benefit; the outer rings orbit it, each
- * artifact a node you can click into. Hover a legend row to light up its ring. */
-export function RingMap({ productId, mission }: RingMapProps) {
+ * artifact a node you can click into. Hover a legend row to light up its ring;
+ * the section being edited stays spotlit. */
+export function RingMap({ productId, mission, activeSection = null, compact = false }: RingMapProps) {
   const trpc = useTRPC();
   const personasQuery = usePersonaListQuery(productId);
   const benefitsQuery = useBenefitListQuery(productId);
@@ -78,15 +93,20 @@ export function RingMap({ productId, mission }: RingMapProps) {
   };
   const filled: Partial<Record<ProductSectionId, boolean>> = { mission: !!mission };
 
-  const dim = (label: RingLabel) => hovered != null && hovered !== label;
+  /* Hover wins while present; otherwise the edited section's ring stays lit. */
+  const activeRing = activeSection ? ringOfSection(activeSection) : null;
+  const spotlight = hovered ?? activeRing;
+  const dim = (label: RingLabel) => spotlight != null && spotlight !== label;
 
   return (
-    <div className="flex w-full flex-col items-center gap-7">
-      <p className="max-w-md text-center text-xs leading-relaxed text-muted-foreground">
-        바깥 링은 안쪽 링에 기대어 있어요. 가운데 뿌리를 건드리면 바깥쪽이 전부 흔들립니다.
-      </p>
+    <div className={cn("flex w-full flex-col items-center", compact ? "gap-4" : "gap-7")}>
+      {!compact && (
+        <p className="max-w-md text-center text-xs leading-relaxed text-muted-foreground">
+          바깥 링은 안쪽 링에 기대어 있어요. 가운데 뿌리를 건드리면 바깥쪽이 전부 흔들립니다.
+        </p>
+      )}
 
-      <div className="relative mx-auto aspect-square w-full max-w-124">
+      <div className={cn("relative mx-auto aspect-square w-full", compact ? "max-w-56" : "max-w-124")}>
         {/* Soft, slowly breathing glow behind the core. */}
         <motion.div
           aria-hidden
@@ -101,7 +121,7 @@ export function RingMap({ productId, mission }: RingMapProps) {
           {/* Filled bands, drawn largest → smallest so they read as nested rings. */}
           {[...ORDER].reverse().map((label, i) => {
             const geo = RING_GEO[label];
-            const target = dim(label) ? geo.fill * 0.4 : hovered === label ? Math.min(1, geo.fill * 1.6) : geo.fill;
+            const target = dim(label) ? geo.fill * 0.4 : spotlight === label ? Math.min(1, geo.fill * 1.6) : geo.fill;
             return (
               <motion.circle
                 key={label}
@@ -155,6 +175,7 @@ export function RingMap({ productId, mission }: RingMapProps) {
               item={item}
               productId={productId}
               tone="core"
+              active={item.section != null && item.section === activeSection}
               count={item.section ? count[item.section] : undefined}
               filled={item.section ? filled[item.section] : undefined}
             />
@@ -181,6 +202,7 @@ export function RingMap({ productId, mission }: RingMapProps) {
                   item={item}
                   productId={productId}
                   tone="orbit"
+                  active={item.section != null && item.section === activeSection}
                   count={item.section ? count[item.section] : undefined}
                   filled={item.section ? filled[item.section] : undefined}
                 />
@@ -191,6 +213,7 @@ export function RingMap({ productId, mission }: RingMapProps) {
       </div>
 
       {/* Legend — names + plain-language roles; hover to spotlight a ring. */}
+      {!compact && (
       <div className="flex w-full max-w-md flex-col gap-1">
         {ORDER.map((label) => (
           <div
@@ -210,6 +233,7 @@ export function RingMap({ productId, mission }: RingMapProps) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
@@ -218,12 +242,14 @@ function Node({
   item,
   productId,
   tone,
+  active = false,
   count,
   filled,
 }: {
   item: ProductNavItem;
   productId: string;
   tone: "core" | "orbit";
+  active?: boolean;
   count?: number;
   filled?: boolean;
 }) {
@@ -239,6 +265,10 @@ function Node({
         isCore
           ? "justify-center bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25"
           : "bg-card text-foreground hover:shadow-md",
+        active &&
+          (isCore
+            ? "bg-primary-foreground text-primary ring-2 ring-primary-foreground"
+            : "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"),
       )}
     >
       <Icon className="size-3.5 shrink-0" />
